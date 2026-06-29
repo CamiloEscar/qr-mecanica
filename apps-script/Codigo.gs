@@ -18,14 +18,29 @@ const SHEETS = {
   CLIENTES: 'Clientes',
   VEHICULOS: 'Vehiculos',
   SERVICIOS: 'Servicios',
-  ACCESOS_LOG: 'AccesosLog'
+  ACCESOS_LOG: 'AccesosLog',
+  TURNOS: 'Turnos',
+  PRESUPUESTOS: 'Presupuestos',
+  PRESUPUESTOS_ITEMS: 'Presupuestos_Items'
 };
 
 const COLUMNAS = {
   CLIENTES: ['ID_Cliente', 'Nombre', 'Telefono', 'Email', 'Fecha_Alta', 'Consentimiento'],
   VEHICULOS: ['ID_Vehiculo', 'Token', 'Fecha_Alta', 'Activo', 'Patente', 'Marca', 'Modelo', 'Anio', 'Combustible', 'ID_Cliente', 'URL_QR_Impresa'],
   SERVICIOS: ['ID_Servicio', 'Fecha', 'ID_Vehiculo', 'Kilometraje', 'Descripcion', 'Repuestos', 'Proximo_Mantenimiento', 'Observaciones', 'Fotos_IDs', 'ID_Mecanico'],
-  ACCESOS_LOG: ['Timestamp', 'Token_Suffix', 'Email_O_Anonimo']
+  ACCESOS_LOG: ['Timestamp', 'Token_Suffix', 'Email_O_Anonimo'],
+  TURNOS: ['ID_Turno', 'Fecha_Hora', 'Duracion_Minutos', 'ID_Vehiculo', 'Tipo_Servicio', 'Descripcion', 'Estado', 'ID_Mecanico', 'Fecha_Creacion', 'Notas'],
+  PRESUPUESTOS: ['ID_Presupuesto', 'Fecha', 'Fecha_Vencimiento', 'ID_Vehiculo', 'Estado', 'Subtotal', 'Total', 'Validez_Dias', 'Token_Publico', 'Notas', 'ID_Servicio', 'Fecha_Aprobacion'],
+  PRESUPUESTOS_ITEMS: ['ID_Item', 'ID_Presupuesto', 'Descripcion', 'Cantidad', 'Precio_Unitario', 'Subtotal_Item', 'Tipo']
+};
+
+const ESTADOS_PRESUPUESTO = {
+  BORRADOR: 'borrador',
+  ENVIADO: 'enviado',
+  APROBADO: 'aprobado',
+  RECHAZADO: 'rechazado',
+  VENCIDO: 'vencido',
+  COMPLETADO: 'completado'
 };
 
 const TOKEN_REGEX = /^[a-zA-Z0-9]{16}$/;
@@ -37,6 +52,7 @@ function doGet(e) {
   if (accion === 'admin') return serveAdminPage((e.parameter && e.parameter.session) || '');
   if (accion === 'imprimir' && e.parameter.v) return serveQRPrintPage(e.parameter.v, (e.parameter && e.parameter.session) || '');
   if (accion === 'api') return apiMecano(e);
+  if (accion === 'presupuesto' && e.parameter.token) return servePresupuestoPublico(e.parameter.token);
   const token = (e && e.parameter && e.parameter.t) || '';
   if (!TOKEN_REGEX.test(token)) {
     return serveError('El enlace no es válido. Verificá que esté completo.');
@@ -297,12 +313,15 @@ function setupInicial() {
   }
 
   const ss = SpreadsheetApp.openById(sheetId);
-  const hojasACrear = ['Clientes', 'Vehiculos', 'Servicios', 'AccesosLog'];
+  const hojasACrear = ['Clientes', 'Vehiculos', 'Servicios', 'AccesosLog', 'Turnos', 'Presupuestos', 'Presupuestos_Items'];
   const headersPorHoja = {
     'Clientes': COLUMNAS.CLIENTES,
     'Vehiculos': COLUMNAS.VEHICULOS,
     'Servicios': COLUMNAS.SERVICIOS,
     'AccesosLog': COLUMNAS.ACCESOS_LOG,
+    'Turnos': COLUMNAS.TURNOS,
+    'Presupuestos': COLUMNAS.PRESUPUESTOS,
+    'Presupuestos_Items': COLUMNAS.PRESUPUESTOS_ITEMS,
   };
 
   hojasACrear.forEach(nombre => {
@@ -612,6 +631,45 @@ function apiMecano(e) {
         case 'dashboard':
           resultado = obtenerDashboard();
           break;
+        case 'altaTurno':
+          resultado = altaTurnoInterno(payload);
+          break;
+        case 'listarTurnos':
+          resultado = { ok: true, turnos: listarTurnos(payload || {}) };
+          break;
+        case 'actualizarTurno':
+          resultado = actualizarTurnoInterno(payload);
+          break;
+        case 'cancelarTurno':
+          resultado = cancelarTurnoInterno(payload.id);
+          break;
+        case 'completarTurno':
+          resultado = completarTurnoInterno(payload.id);
+          break;
+        case 'altaPresupuesto':
+          resultado = altaPresupuestoInterno(payload);
+          break;
+        case 'listarPresupuestos':
+          resultado = { ok: true, presupuestos: listarPresupuestos(payload || {}) };
+          break;
+        case 'obtenerPresupuesto':
+          resultado = obtenerPresupuesto(payload.id);
+          break;
+        case 'actualizarPresupuesto':
+          resultado = actualizarPresupuestoInterno(payload);
+          break;
+        case 'marcarPresupuestoEnviado':
+          resultado = marcarPresupuestoEnviado(payload.id);
+          break;
+        case 'aprobarPresupuesto':
+          resultado = aprobarPresupuesto(payload.token);
+          break;
+        case 'rechazarPresupuesto':
+          resultado = rechazarPresupuesto(payload.token, payload.motivo);
+          break;
+        case 'crearHojaPresupuestos':
+          resultado = crearHojaPresupuestos();
+          break;
         default:
           resultado = { ok: false, error: 'Acción desconocida: ' + action };
       }
@@ -772,6 +830,912 @@ function obtenerDashboard() {
   }
 }
 
+function parsearFechaHora(s, fallback) {
+  if (!s) return fallback || new Date();
+  if (s instanceof Date) return s;
+  const normalizado = String(s).replace('T', ' ').replace(/-/g, '-');
+  const d = new Date(normalizado);
+  if (!isNaN(d.getTime())) return d;
+  return fallback || new Date();
+}
+
+function altaTurnoInterno(payload) {
+  try {
+    if (!payload || !payload.idVehiculo) return { ok: false, error: 'Falta el vehículo' };
+    if (!payload.fechaHora) return { ok: false, error: 'Falta la fecha y hora' };
+    if (!payload.tipoServicio) return { ok: false, error: 'Falta el tipo de servicio' };
+    const sheet = obtenerSheet(SHEETS.TURNOS);
+    const id = nextId(SHEETS.TURNOS, 'T');
+    const fechaHora = parsearFechaHora(payload.fechaHora);
+    const duracion = parseInt(payload.duracionMinutos, 10) || 60;
+    const estado = payload.estado || 'pendiente';
+    const fila = [
+      id,
+      fechaHora,
+      duracion,
+      payload.idVehiculo,
+      payload.tipoServicio,
+      payload.descripcion || '',
+      estado,
+      payload.idMecanico || '',
+      ahoraComoString(),
+      payload.notas || ''
+    ];
+    sheet.appendRow(fila);
+    return { ok: true, id: id };
+  } catch (err) {
+    return { ok: false, error: 'No se pudo crear el turno: ' + (err && err.message ? err.message : err) };
+  }
+}
+
+function buscarFilaPorId(nombreSheet, nombreColumnaId, idBuscado) {
+  const sheet = obtenerSheet(nombreSheet);
+  const data = sheet.getDataRange().getValues();
+  if (data.length === 0) return -1;
+  const headers = data[0];
+  const idCol = headers.indexOf(nombreColumnaId);
+  if (idCol === -1) return -1;
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][idCol]) === String(idBuscado)) return i + 1;
+  }
+  return -1;
+}
+
+function listarTurnos(filtros) {
+  try {
+    const turnos = sheetAObjetos(SHEETS.TURNOS);
+    const vehiculos = sheetAObjetos(SHEETS.VEHICULOS);
+    const clientes = sheetAObjetos(SHEETS.CLIENTES);
+    const vehiculoMap = {};
+    vehiculos.forEach(function (v) { vehiculoMap[v.ID_Vehiculo] = v; });
+    const clienteMap = {};
+    clientes.forEach(function (c) { clienteMap[c.ID_Cliente] = c; });
+
+    const f = filtros || {};
+    const desdeMs = f.desde ? new Date(f.desde).getTime() : null;
+    const hastaMs = f.hasta ? new Date(f.hasta).getTime() : null;
+    const estadoFiltro = f.estado ? String(f.estado) : null;
+    const idVehFiltro = f.idVehiculo ? String(f.idVehiculo) : null;
+
+    let filtrados = turnos.filter(function (t) {
+      if (estadoFiltro && String(t.Estado) !== estadoFiltro) return false;
+      if (idVehFiltro && String(t.ID_Vehiculo) !== idVehFiltro) return false;
+      if (desdeMs || hastaMs) {
+        const fh = t.Fecha_Hora ? new Date(t.Fecha_Hora).getTime() : null;
+        if (!fh || isNaN(fh)) return false;
+        if (desdeMs && fh < desdeMs) return false;
+        if (hastaMs && fh > hastaMs) return false;
+      }
+      return true;
+    });
+
+    filtrados.forEach(function (t) {
+      const veh = vehiculoMap[t.ID_Vehiculo];
+      t.Patente = veh ? veh.Patente : '';
+      t.Marca = veh ? veh.Marca : '';
+      t.Modelo = veh ? veh.Modelo : '';
+      if (veh && veh.ID_Cliente) {
+        const cli = clienteMap[veh.ID_Cliente];
+        t.clienteNombre = cli ? cli.Nombre : '';
+        t.Telefono_Cliente = cli ? cli.Telefono : '';
+      } else {
+        t.clienteNombre = '';
+        t.Telefono_Cliente = '';
+      }
+    });
+
+    filtrados.sort(function (a, b) {
+      const fa = a.Fecha_Hora ? new Date(a.Fecha_Hora).getTime() : 0;
+      const fb = b.Fecha_Hora ? new Date(b.Fecha_Hora).getTime() : 0;
+      return fa - fb;
+    });
+
+    return filtrados;
+  } catch (err) {
+    Logger.log('Error en listarTurnos: ' + (err && err.message ? err.message : err));
+    return [];
+  }
+}
+
+function actualizarTurnoInterno(payload) {
+  try {
+    if (!payload || !payload.id) return { ok: false, error: 'Falta el ID del turno' };
+    const fila = buscarFilaPorId(SHEETS.TURNOS, 'ID_Turno', payload.id);
+    if (fila === -1) return { ok: false, error: 'Turno no encontrado: ' + payload.id };
+
+    const sheet = obtenerSheet(SHEETS.TURNOS);
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+    const camposActualizables = {
+      fechaHora: 'Fecha_Hora',
+      duracionMinutos: 'Duracion_Minutos',
+      idVehiculo: 'ID_Vehiculo',
+      tipoServicio: 'Tipo_Servicio',
+      descripcion: 'Descripcion',
+      estado: 'Estado',
+      idMecanico: 'ID_Mecanico',
+      notas: 'Notas'
+    };
+
+    Object.keys(camposActualizables).forEach(function (key) {
+      if (!(key in payload)) return;
+      const colName = camposActualizables[key];
+      const colIdx = headers.indexOf(colName);
+      if (colIdx === -1) return;
+      let valor = payload[key];
+      if (colName === 'Fecha_Hora') valor = parsearFechaHora(valor);
+      else if (colName === 'Duracion_Minutos') valor = parseInt(valor, 10) || 60;
+      else if (valor === null || valor === undefined) valor = '';
+      sheet.getRange(fila, colIdx + 1).setValue(valor);
+    });
+
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: 'No se pudo actualizar el turno: ' + (err && err.message ? err.message : err) };
+  }
+}
+
+function cancelarTurnoInterno(idTurno) {
+  try {
+    if (!idTurno) return { ok: false, error: 'Falta el ID del turno' };
+    const fila = buscarFilaPorId(SHEETS.TURNOS, 'ID_Turno', idTurno);
+    if (fila === -1) return { ok: false, error: 'Turno no encontrado: ' + idTurno };
+    const sheet = obtenerSheet(SHEETS.TURNOS);
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const estadoCol = headers.indexOf('Estado') + 1;
+    sheet.getRange(fila, estadoCol).setValue('cancelado');
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: 'No se pudo cancelar el turno: ' + (err && err.message ? err.message : err) };
+  }
+}
+
+function completarTurnoInterno(idTurno) {
+  try {
+    if (!idTurno) return { ok: false, error: 'Falta el ID del turno' };
+    const fila = buscarFilaPorId(SHEETS.TURNOS, 'ID_Turno', idTurno);
+    if (fila === -1) return { ok: false, error: 'Turno no encontrado: ' + idTurno };
+
+    const turnos = sheetAObjetos(SHEETS.TURNOS);
+    const turno = turnos.find(function (t) { return String(t.ID_Turno) === String(idTurno); });
+    if (!turno) return { ok: false, error: 'Turno no encontrado en datos' };
+
+    const sheet = obtenerSheet(SHEETS.TURNOS);
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const estadoCol = headers.indexOf('Estado') + 1;
+    sheet.getRange(fila, estadoCol).setValue('completado');
+
+    const descripcionFinal = turno.Descripcion && String(turno.Descripcion).trim()
+      ? String(turno.Descripcion)
+      : String(turno.Tipo_Servicio || 'Servicio');
+
+    const fechaServicio = turno.Fecha_Hora ? parsearFechaHora(turno.Fecha_Hora) : new Date();
+
+    const resultadoServicio = altaServicioInterno({
+      idVehiculo: turno.ID_Vehiculo,
+      fecha: fechaServicio,
+      kilometraje: 0,
+      descripcion: descripcionFinal,
+      repuestos: '',
+      proximoMantenimiento: '',
+      observaciones: 'Generado automáticamente desde turno ' + idTurno + ' · ' + String(turno.Tipo_Servicio || ''),
+      fotosIds: '',
+      idMecanico: turno.ID_Mecanico || ''
+    });
+
+    if (!resultadoServicio.ok) {
+      return { ok: false, error: 'Turno marcado pero no se pudo crear el servicio: ' + resultadoServicio.error };
+    }
+
+    return { ok: true, servicioId: resultadoServicio.id, message: 'Turno completado y servicio creado' };
+  } catch (err) {
+    return { ok: false, error: 'No se pudo completar el turno: ' + (err && err.message ? err.message : err) };
+  }
+}
+
+function generarTokenPresupuestoUnico() {
+  const presupuestos = sheetAObjetos(SHEETS.PRESUPUESTOS);
+  const existentes = new Set();
+  for (let i = 0; i < presupuestos.length; i++) {
+    if (presupuestos[i].Token_Publico) existentes.add(presupuestos[i].Token_Publico);
+  }
+  while (true) {
+    let token = '';
+    for (let i = 0; i < 16; i++) {
+      token += CHARSET.charAt(Math.floor(Math.random() * CHARSET.length));
+    }
+    if (!existentes.has(token)) return token;
+  }
+}
+
+function altaPresupuestoInterno(payload) {
+  try {
+    if (!payload || !payload.idVehiculo) return { ok: false, error: 'Falta el vehículo' };
+    if (!payload.items || !Array.isArray(payload.items) || payload.items.length === 0) {
+      return { ok: false, error: 'Agregá al menos un item al presupuesto' };
+    }
+    const vehiculo = buscarVehiculoPorId(payload.idVehiculo);
+    if (!vehiculo) return { ok: false, error: 'Vehículo no encontrado: ' + payload.idVehiculo };
+
+    const id = nextId(SHEETS.PRESUPUESTOS, 'P');
+    const token = generarTokenPresupuestoUnico();
+    const validezDias = parseInt(payload.validezDias, 10) || 15;
+    const fecha = ahoraComoString();
+    const fechaVencimiento = formatearFechaVencimiento(new Date(), validezDias);
+
+    let subtotal = 0;
+    const itemsNormalizados = [];
+    for (let i = 0; i < payload.items.length; i++) {
+      const it = payload.items[i];
+      const descripcion = (it.descripcion || '').toString().trim();
+      if (!descripcion) return { ok: false, error: 'Item ' + (i + 1) + ': la descripción es obligatoria' };
+      const cantidad = parseFloat(it.cantidad) || 0;
+      const precioUnitario = parseFloat(it.precioUnitario) || 0;
+      if (cantidad <= 0) return { ok: false, error: 'Item ' + (i + 1) + ': la cantidad debe ser mayor a 0' };
+      if (precioUnitario < 0) return { ok: false, error: 'Item ' + (i + 1) + ': el precio unitario no puede ser negativo' };
+      const subItem = cantidad * precioUnitario;
+      subtotal += subItem;
+      const tipo = (it.tipo === 'mano_obra') ? 'mano_obra' : 'repuesto';
+      itemsNormalizados.push({
+        descripcion: descripcion,
+        cantidad: cantidad,
+        precioUnitario: precioUnitario,
+        subtotal: subItem,
+        tipo: tipo
+      });
+    }
+    const total = Math.round(subtotal * 100) / 100;
+    const subtotalRed = Math.round(subtotal * 100) / 100;
+
+    const sheetP = obtenerSheet(SHEETS.PRESUPUESTOS);
+    sheetP.appendRow([
+      id,
+      fecha,
+      fechaVencimiento,
+      payload.idVehiculo,
+      ESTADOS_PRESUPUESTO.BORRADOR,
+      subtotalRed,
+      total,
+      validezDias,
+      token,
+      payload.notas || '',
+      '',
+      ''
+    ]);
+
+    const sheetItems = obtenerSheet(SHEETS.PRESUPUESTOS_ITEMS);
+    const itemsParaSheet = [];
+    for (let j = 0; j < itemsNormalizados.length; j++) {
+      const it = itemsNormalizados[j];
+      const idItem = nextId(SHEETS.PRESUPUESTOS_ITEMS, 'PI');
+      itemsParaSheet.push([
+        idItem,
+        id,
+        it.descripcion,
+        it.cantidad,
+        it.precioUnitario,
+        it.subtotal,
+        it.tipo
+      ]);
+    }
+    if (itemsParaSheet.length > 0) {
+      const startRow = sheetItems.getLastRow() + 1;
+      sheetItems.getRange(startRow, 1, itemsParaSheet.length, COLUMNAS.PRESUPUESTOS_ITEMS.length).setValues(itemsParaSheet);
+    }
+
+    return {
+      ok: true,
+      id: id,
+      token: token,
+      total: total,
+      subtotal: subtotalRed,
+      items: itemsNormalizados.length
+    };
+  } catch (err) {
+    return { ok: false, error: 'No se pudo crear el presupuesto: ' + (err && err.message ? err.message : err) };
+  }
+}
+
+function listarPresupuestos(filtros) {
+  try {
+    const presupuestos = sheetAObjetos(SHEETS.PRESUPUESTOS);
+    const vehiculos = sheetAObjetos(SHEETS.VEHICULOS);
+    const clientes = sheetAObjetos(SHEETS.CLIENTES);
+    const items = sheetAObjetos(SHEETS.PRESUPUESTOS_ITEMS);
+
+    const vehiculoMap = {};
+    vehiculos.forEach(function (v) { vehiculoMap[v.ID_Vehiculo] = v; });
+    const clienteMap = {};
+    clientes.forEach(function (c) { clienteMap[c.ID_Cliente] = c; });
+
+    const itemsPorPresupuesto = {};
+    let totalItems = 0;
+    items.forEach(function (it) {
+      if (!itemsPorPresupuesto[it.ID_Presupuesto]) itemsPorPresupuesto[it.ID_Presupuesto] = 0;
+      itemsPorPresupuesto[it.ID_Presupuesto]++;
+      totalItems++;
+    });
+
+    const f = filtros || {};
+    const estadoFiltro = f.estado ? String(f.estado) : null;
+    const idVehFiltro = f.idVehiculo ? String(f.idVehiculo) : null;
+    const desdeMs = f.desde ? new Date(f.desde).getTime() : null;
+    const hastaMs = f.hasta ? new Date(f.hasta).getTime() : null;
+    const q = (f.q || '').toString().toLowerCase().trim();
+
+    const ahora = new Date();
+    const filtrados = presupuestos.filter(function (p) {
+      let estadoCalc = String(p.Estado || '');
+      if (estadoCalc === ESTADOS_PRESUPUESTO.ENVIADO && p.Fecha_Vencimiento) {
+        const fv = p.Fecha_Vencimiento instanceof Date ? p.Fecha_Vencimiento : new Date(p.Fecha_Vencimiento);
+        if (!isNaN(fv.getTime()) && fv.getTime() < ahora.getTime()) {
+          estadoCalc = ESTADOS_PRESUPUESTO.VENCIDO;
+        }
+      }
+      p._EstadoCalculado = estadoCalc;
+
+      if (estadoFiltro && estadoCalc !== estadoFiltro) return false;
+      if (idVehFiltro && String(p.ID_Vehiculo) !== idVehFiltro) return false;
+      if (desdeMs || hastaMs) {
+        const fp = p.Fecha ? new Date(p.Fecha).getTime() : null;
+        if (!fp || isNaN(fp)) return false;
+        if (desdeMs && fp < desdeMs) return false;
+        if (hastaMs && fp > hastaMs) return false;
+      }
+      if (q) {
+        const veh = vehiculoMap[p.ID_Vehiculo];
+        const cli = veh ? clienteMap[veh.ID_Cliente] : null;
+        const haystack = [
+          p.ID_Presupuesto,
+          veh ? veh.Patente : '',
+          veh ? veh.Marca : '',
+          veh ? veh.Modelo : '',
+          cli ? cli.Nombre : '',
+          p.Notas || ''
+        ].join(' ').toLowerCase();
+        if (haystack.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+
+    filtrados.forEach(function (p) {
+      const veh = vehiculoMap[p.ID_Vehiculo];
+      p.Patente = veh ? veh.Patente : '';
+      p.Marca = veh ? veh.Marca : '';
+      p.Modelo = veh ? veh.Modelo : '';
+      if (veh) {
+        const cli = clienteMap[veh.ID_Cliente];
+        p.clienteNombre = cli ? cli.Nombre : '';
+        p.clienteTelefono = cli ? cli.Telefono : '';
+      }
+      p.itemsCount = itemsPorPresupuesto[p.ID_Presupuesto] || 0;
+      p.urlPublica = p.Token_Publico ? ScriptApp.getService().getUrl() + '?accion=presupuesto&token=' + p.Token_Publico : '';
+    });
+
+    filtrados.sort(function (a, b) {
+      const fa = a.Fecha ? new Date(a.Fecha).getTime() : 0;
+      const fb = b.Fecha ? new Date(b.Fecha).getTime() : 0;
+      return fb - fa;
+    });
+
+    return filtrados;
+  } catch (err) {
+    Logger.log('Error en listarPresupuestos: ' + (err && err.message ? err.message : err));
+    return [];
+  }
+}
+
+function obtenerPresupuesto(id) {
+  try {
+    if (!id) return { ok: false, error: 'Falta el ID del presupuesto' };
+    const presupuestos = sheetAObjetos(SHEETS.PRESUPUESTOS);
+    const presupuesto = presupuestos.find(function (p) { return p.ID_Presupuesto === id; });
+    if (!presupuesto) return { ok: false, error: 'Presupuesto no encontrado: ' + id };
+
+    const vehiculo = presupuesto.ID_Vehiculo ? buscarVehiculoPorId(presupuesto.ID_Vehiculo) : null;
+    let cliente = null;
+    if (vehiculo && vehiculo.ID_Cliente) {
+      const clientes = sheetAObjetos(SHEETS.CLIENTES);
+      cliente = clientes.find(function (c) { return c.ID_Cliente === vehiculo.ID_Cliente; }) || null;
+    }
+    const items = listarItemsPorPresupuesto(id);
+
+    if (presupuesto.Token_Publico) {
+      presupuesto.urlPublica = ScriptApp.getService().getUrl() + '?accion=presupuesto&token=' + presupuesto.Token_Publico;
+    }
+
+    return {
+      ok: true,
+      presupuesto: presupuesto,
+      items: items,
+      vehiculo: vehiculo || null,
+      cliente: cliente
+    };
+  } catch (err) {
+    return { ok: false, error: 'No se pudo obtener el presupuesto: ' + (err && err.message ? err.message : err) };
+  }
+}
+
+function actualizarPresupuestoInterno(payload) {
+  try {
+    if (!payload || !payload.id) return { ok: false, error: 'Falta el ID del presupuesto' };
+    const fila = buscarFilaPorId(SHEETS.PRESUPUESTOS, 'ID_Presupuesto', payload.id);
+    if (fila === -1) return { ok: false, error: 'Presupuesto no encontrado: ' + payload.id };
+
+    const sheet = obtenerSheet(SHEETS.PRESUPUESTOS);
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+    const camposActualizables = {
+      estado: 'Estado',
+      notas: 'Notas',
+      idServicio: 'ID_Servicio',
+      fechaAprobacion: 'Fecha_Aprobacion'
+    };
+
+    Object.keys(camposActualizables).forEach(function (key) {
+      if (!(key in payload)) return;
+      const colName = camposActualizables[key];
+      const colIdx = headers.indexOf(colName);
+      if (colIdx === -1) return;
+      let valor = payload[key];
+      if (valor === null || valor === undefined) valor = '';
+      sheet.getRange(fila, colIdx + 1).setValue(valor);
+    });
+
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: 'No se pudo actualizar el presupuesto: ' + (err && err.message ? err.message : err) };
+  }
+}
+
+function marcarPresupuestoEnviado(id) {
+  try {
+    if (!id) return { ok: false, error: 'Falta el ID del presupuesto' };
+    const presupuestos = sheetAObjetos(SHEETS.PRESUPUESTOS);
+    const presupuesto = presupuestos.find(function (p) { return p.ID_Presupuesto === id; });
+    if (!presupuesto) return { ok: false, error: 'Presupuesto no encontrado: ' + id };
+
+    if (presupuesto.Estado === ESTADOS_PRESUPUESTO.APROBADO ||
+        presupuesto.Estado === ESTADOS_PRESUPUESTO.RECHAZADO ||
+        presupuesto.Estado === ESTADOS_PRESUPUESTO.COMPLETADO) {
+      return { ok: false, error: 'No se puede enviar un presupuesto en estado ' + presupuesto.Estado };
+    }
+
+    const r = actualizarPresupuestoInterno({ id: id, estado: ESTADOS_PRESUPUESTO.ENVIADO });
+    if (!r.ok) return r;
+
+    return {
+      ok: true,
+      token: presupuesto.Token_Publico,
+      urlPublica: ScriptApp.getService().getUrl() + '?accion=presupuesto&token=' + presupuesto.Token_Publico
+    };
+  } catch (err) {
+    return { ok: false, error: 'No se pudo marcar como enviado: ' + (err && err.message ? err.message : err) };
+  }
+}
+
+function aprobarPresupuesto(token) {
+  try {
+    if (!token || !/^[a-zA-Z0-9]{16}$/.test(token)) {
+      return { ok: false, error: 'Token inválido' };
+    }
+    const presupuestos = sheetAObjetos(SHEETS.PRESUPUESTOS);
+    const presupuesto = presupuestos.find(function (p) { return p.Token_Publico === token; });
+    if (!presupuesto) return { ok: false, error: 'Presupuesto no encontrado' };
+
+    if (presupuesto.Estado !== ESTADOS_PRESUPUESTO.ENVIADO &&
+        presupuesto.Estado !== ESTADOS_PRESUPUESTO.BORRADOR) {
+      return { ok: false, error: 'Este presupuesto ya fue ' + presupuesto.Estado + ' y no se puede aprobar de nuevo' };
+    }
+
+    const items = listarItemsPorPresupuesto(presupuesto.ID_Presupuesto);
+    const repuestosTexto = items.map(function (it) {
+      return (it.Cantidad || 1) + 'x ' + (it.Descripcion || '');
+    }).join(', ');
+
+    const descripcionItems = items.map(function (it) {
+      return (it.Tipo === 'mano_obra' ? 'MO: ' : '') + (it.Descripcion || '');
+    }).join(' · ');
+
+    const fechaAprob = new Date();
+    const resultadoServicio = altaServicioInterno({
+      idVehiculo: presupuesto.ID_Vehiculo,
+      fecha: fechaAprob,
+      kilometraje: 0,
+      descripcion: 'Presupuesto aprobado #' + presupuesto.ID_Presupuesto + ' · ' + descripcionItems,
+      repuestos: repuestosTexto,
+      proximoMantenimiento: '',
+      observaciones: 'Generado automáticamente desde presupuesto ' + presupuesto.ID_Presupuesto,
+      fotosIds: '',
+      idMecanico: ''
+    });
+
+    if (!resultadoServicio.ok) {
+      return { ok: false, error: 'No se pudo crear el servicio: ' + resultadoServicio.error };
+    }
+
+    const r = actualizarPresupuestoInterno({
+      id: presupuesto.ID_Presupuesto,
+      estado: ESTADOS_PRESUPUESTO.APROBADO,
+      idServicio: resultadoServicio.id,
+      fechaAprobacion: Utilities.formatDate(fechaAprob, Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss')
+    });
+    if (!r.ok) return r;
+
+    return {
+      ok: true,
+      message: 'Presupuesto aprobado y servicio creado',
+      servicioId: resultadoServicio.id,
+      idPresupuesto: presupuesto.ID_Presupuesto
+    };
+  } catch (err) {
+    return { ok: false, error: 'No se pudo aprobar el presupuesto: ' + (err && err.message ? err.message : err) };
+  }
+}
+
+function rechazarPresupuesto(token, motivo) {
+  try {
+    if (!token || !/^[a-zA-Z0-9]{16}$/.test(token)) {
+      return { ok: false, error: 'Token inválido' };
+    }
+    const presupuestos = sheetAObjetos(SHEETS.PRESUPUESTOS);
+    const presupuesto = presupuestos.find(function (p) { return p.Token_Publico === token; });
+    if (!presupuesto) return { ok: false, error: 'Presupuesto no encontrado' };
+
+    if (presupuesto.Estado === ESTADOS_PRESUPUESTO.APROBADO ||
+        presupuesto.Estado === ESTADOS_PRESUPUESTO.COMPLETADO ||
+        presupuesto.Estado === ESTADOS_PRESUPUESTO.RECHAZADO) {
+      return { ok: false, error: 'Este presupuesto ya está en estado ' + presupuesto.Estado };
+    }
+
+    const motivoLimpio = (motivo || '').toString().trim();
+    const notasActuales = (presupuesto.Notas || '').toString();
+    const sep = notasActuales ? ' | ' : '';
+    const motivoTexto = motivoLimpio ? ('[Rechazado: ' + motivoLimpio + ']') : '[Rechazado]';
+    const notasNuevas = notasActuales + sep + motivoTexto;
+
+    const r = actualizarPresupuestoInterno({
+      id: presupuesto.ID_Presupuesto,
+      estado: ESTADOS_PRESUPUESTO.RECHAZADO,
+      notas: notasNuevas
+    });
+    if (!r.ok) return r;
+
+    return { ok: true, message: 'Presupuesto rechazado' };
+  } catch (err) {
+    return { ok: false, error: 'No se pudo rechazar el presupuesto: ' + (err && err.message ? err.message : err) };
+  }
+}
+
+function buscarPresupuestoPorToken(token) {
+  const presupuestos = sheetAObjetos(SHEETS.PRESUPUESTOS);
+  return presupuestos.find(function (p) { return p.Token_Publico === token; }) || null;
+}
+
+function listarItemsPorPresupuesto(idPresupuesto) {
+  const items = sheetAObjetos(SHEETS.PRESUPUESTOS_ITEMS);
+  return items.filter(function (i) { return i.ID_Presupuesto === idPresupuesto; });
+}
+
+function formatearFechaVencimiento(fechaBase, dias) {
+  const d = new Date(fechaBase.getTime());
+  d.setDate(d.getDate() + (parseInt(dias, 10) || 15));
+  return Utilities.formatDate(d, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+}
+
+function servePresupuestoPublico(token) {
+  if (!token || !/^[a-zA-Z0-9]{16}$/.test(token)) {
+    return serveError('Enlace inválido.');
+  }
+  const presupuesto = buscarPresupuestoPorToken(token);
+  if (!presupuesto) return serveError('Presupuesto no encontrado.');
+
+  const estadoCalc = calcularEstadoPresupuesto(presupuesto);
+  presupuesto.Estado = estadoCalc;
+
+  const items = listarItemsPorPresupuesto(presupuesto.ID_Presupuesto);
+  items.sort(function (a, b) {
+    return String(a.ID_Item).localeCompare(String(b.ID_Item));
+  });
+
+  const vehiculo = presupuesto.ID_Vehiculo ? buscarVehiculoPorId(presupuesto.ID_Vehiculo) : null;
+  let cliente = null;
+  if (vehiculo && vehiculo.ID_Cliente) {
+    const clientes = sheetAObjetos(SHEETS.CLIENTES);
+    cliente = clientes.find(function (c) { return c.ID_Cliente === vehiculo.ID_Cliente; }) || null;
+  }
+
+  const t = HtmlService.createTemplateFromFile('PresupuestoPage');
+  t.presupuesto = presupuesto;
+  t.items = items;
+  t.vehiculo = vehiculo || {};
+  t.cliente = cliente || {};
+  t.webappUrl = ScriptApp.getService().getUrl();
+  return t.evaluate()
+    .setTitle('Presupuesto #' + presupuesto.ID_Presupuesto + ' - Mecanica Martinez')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+
+function calcularEstadoPresupuesto(p) {
+  let estado = String(p.Estado || '');
+  if (estado === ESTADOS_PRESUPUESTO.ENVIADO && p.Fecha_Vencimiento) {
+    const fv = p.Fecha_Vencimiento instanceof Date ? p.Fecha_Vencimiento : new Date(p.Fecha_Vencimiento);
+    if (!isNaN(fv.getTime()) && fv.getTime() < new Date().getTime()) {
+      return ESTADOS_PRESUPUESTO.VENCIDO;
+    }
+  }
+  return estado;
+}
+
+function crearHojaPresupuestos() {
+  try {
+    const ss = SpreadsheetApp.openById(obtenerSheetId());
+    const resultado = { presupuesto: 'existente', items: 'existente' };
+
+    let sheet = ss.getSheetByName(SHEETS.PRESUPUESTOS);
+    if (!sheet) {
+      sheet = ss.insertSheet(SHEETS.PRESUPUESTOS);
+      sheet.getRange(1, 1, 1, COLUMNAS.PRESUPUESTOS.length).setValues([COLUMNAS.PRESUPUESTOS]);
+      sheet.getRange(1, 1, 1, COLUMNAS.PRESUPUESTOS.length).setFontWeight('bold').setBackground('#e2e8f0');
+      sheet.setFrozenRows(1);
+      sheet.getRange('B2:B').setNumberFormat('yyyy-MM-dd HH:mm:ss');
+      sheet.getRange('C2:C').setNumberFormat('yyyy-MM-dd');
+      sheet.getRange('M2:M').setNumberFormat('yyyy-MM-dd HH:mm:ss');
+      sheet.getRange('F2:H').setNumberFormat('#,##0.00');
+      resultado.presupuesto = 'creado';
+    }
+
+    sheet = ss.getSheetByName(SHEETS.PRESUPUESTOS_ITEMS);
+    if (!sheet) {
+      sheet = ss.insertSheet(SHEETS.PRESUPUESTOS_ITEMS);
+      sheet.getRange(1, 1, 1, COLUMNAS.PRESUPUESTOS_ITEMS.length).setValues([COLUMNAS.PRESUPUESTOS_ITEMS]);
+      sheet.getRange(1, 1, 1, COLUMNAS.PRESUPUESTOS_ITEMS.length).setFontWeight('bold').setBackground('#e2e8f0');
+      sheet.setFrozenRows(1);
+      sheet.getRange('E2:F').setNumberFormat('#,##0.00');
+      resultado.items = 'creado';
+    }
+
+    return { ok: true, mensaje: 'Hojas de presupuestos listas', resultado: resultado };
+  } catch (err) {
+    return { ok: false, error: 'No se pudieron crear las hojas de presupuestos: ' + (err && err.message ? err.message : err) };
+  }
+}
+
+function cargarPresupuestosDemo() {
+  try {
+    const sheetRes = crearHojaPresupuestos();
+    if (!sheetRes.ok) return sheetRes;
+
+    const vehiculos = sheetAObjetos(SHEETS.VEHICULOS);
+    const vehiculosActivos = vehiculos.filter(function (v) { return esActivo(v.Activo); });
+    if (vehiculosActivos.length === 0) {
+      return { ok: false, error: 'No hay vehículos cargados. Corré primero cargarDatosDemoMasivos().' };
+    }
+
+    const existentes = sheetAObjetos(SHEETS.PRESUPUESTOS);
+    if (existentes.length > 0) {
+      return { ok: false, mensaje: 'Ya hay presupuestos cargados. Limpiá primero con limpiarPresupuestosDemo().', yaCargado: true };
+    }
+
+    const clientes = sheetAObjetos(SHEETS.CLIENTES);
+    const clienteMap = {};
+    clientes.forEach(function (c) { clienteMap[c.ID_Cliente] = c; });
+
+    const plan = [
+      {
+        vehiculo: vehiculosActivos[0],
+        estado: ESTADOS_PRESUPUESTO.BORRADOR,
+        validez: 15,
+        notas: 'Service 60.000 km - cliente frecuente',
+        items: [
+          { tipo: 'repuesto', desc: 'Aceite Shell Helix Ultra 5W40 5L', cant: 1, precio: 45000 },
+          { tipo: 'repuesto', desc: 'Filtro de aceite Mann W712/75', cant: 1, precio: 5500 },
+          { tipo: 'repuesto', desc: 'Filtro de aire Mann C25114', cant: 1, precio: 7800 },
+          { tipo: 'mano_obra', desc: 'Mano de obra service completo', cant: 1, precio: 35000 }
+        ]
+      },
+      {
+        vehiculo: vehiculosActivos[1 % vehiculosActivos.length],
+        estado: ESTADOS_PRESUPUESTO.BORRADOR,
+        validez: 15,
+        notas: 'Diagnostico + presupuesto reparacion tren delantero',
+        items: [
+          { tipo: 'repuesto', desc: 'Kit tren delantero (precaps, rotulas, bujes)', cant: 1, precio: 58000 },
+          { tipo: 'repuesto', desc: 'Extremos de direccion x2', cant: 2, precio: 8500 },
+          { tipo: 'mano_obra', desc: 'Mano de obra reparacion tren delantero', cant: 4, precio: 12000 }
+        ]
+      },
+      {
+        vehiculo: vehiculosActivos[2 % vehiculosActivos.length],
+        estado: ESTADOS_PRESUPUESTO.BORRADOR,
+        validez: 10,
+        notas: 'Aprobado en mostrador, falta enviar',
+        items: [
+          { tipo: 'repuesto', desc: 'Pastillas freno Brembo P85020', cant: 1, precio: 22000 },
+          { tipo: 'repuesto', desc: 'Disco de freno Fremax delantero x2', cant: 2, precio: 32000 },
+          { tipo: 'mano_obra', desc: 'Cambio pastillas y discos delanteros', cant: 1, precio: 25000 }
+        ]
+      },
+      {
+        vehiculo: vehiculosActivos[3 % vehiculosActivos.length],
+        estado: ESTADOS_PRESUPUESTO.ENVIADO,
+        validez: 15,
+        notas: 'Enviado por WhatsApp, esperando respuesta',
+        items: [
+          { tipo: 'repuesto', desc: 'Bujias NGK Iridium ILZKR7B x4', cant: 4, precio: 4500 },
+          { tipo: 'repuesto', desc: 'Cables de bujia', cant: 1, precio: 12000 },
+          { tipo: 'mano_obra', desc: 'Cambio bujias y cables', cant: 1, precio: 18000 }
+        ]
+      },
+      {
+        vehiculo: vehiculosActivos[4 % vehiculosActivos.length],
+        estado: ESTADOS_PRESUPUESTO.ENVIADO,
+        validez: 20,
+        notas: 'Enviado por mail, vence pronto',
+        items: [
+          { tipo: 'repuesto', desc: 'Kit distribucion INA K015457XS', cant: 1, precio: 78000 },
+          { tipo: 'repuesto', desc: 'Bomba de agua', cant: 1, precio: 35000 },
+          { tipo: 'repuesto', desc: 'Correa poly-v', cant: 1, precio: 18000 },
+          { tipo: 'mano_obra', desc: 'Cambio kit distribucion completo', cant: 5, precio: 14000 }
+        ]
+      },
+      {
+        vehiculo: vehiculosActivos[5 % vehiculosActivos.length],
+        estado: ESTADOS_PRESUPUESTO.APROBADO,
+        validez: 15,
+        notas: 'Cliente aprobo por WhatsApp, listo para agendar',
+        items: [
+          { tipo: 'repuesto', desc: 'Aceite Mobil 1 ESP 5W30 4L', cant: 1, precio: 38000 },
+          { tipo: 'repuesto', desc: 'Filtro de aceite Wix 51348', cant: 1, precio: 4800 },
+          { tipo: 'mano_obra', desc: 'Cambio aceite y filtro', cant: 1, precio: 15000 }
+        ]
+      },
+      {
+        vehiculo: vehiculosActivos[6 % vehiculosActivos.length],
+        estado: ESTADOS_PRESUPUESTO.APROBADO,
+        validez: 15,
+        notas: 'Aprobado - servicio agendado para la semana proxima',
+        items: [
+          { tipo: 'repuesto', desc: 'Amortiguadores Monroe G7308 x2', cant: 2, precio: 45000 },
+          { tipo: 'repuesto', desc: 'Cazoletas y bujes', cant: 1, precio: 18000 },
+          { tipo: 'mano_obra', desc: 'Cambio amortiguadores delanteros', cant: 3, precio: 15000 }
+        ]
+      },
+      {
+        vehiculo: vehiculosActivos[7 % vehiculosActivos.length],
+        estado: ESTADOS_PRESUPUESTO.VENCIDO,
+        validez: 7,
+        notas: 'Vencio sin respuesta del cliente',
+        items: [
+          { tipo: 'repuesto', desc: 'Bateria Moura M70TD', cant: 1, precio: 95000 },
+          { tipo: 'mano_obra', desc: 'Cambio bateria y chequeo sistema carga', cant: 1, precio: 8000 }
+        ]
+      }
+    ];
+
+    const sheetP = obtenerSheet(SHEETS.PRESUPUESTOS);
+    const sheetI = obtenerSheet(SHEETS.PRESUPUESTOS_ITEMS);
+    const idsCreados = [];
+
+    const ahoraMs = Date.now();
+
+    plan.forEach(function (p, idx) {
+      const id = nextId(SHEETS.PRESUPUESTOS, 'P');
+      const token = generarTokenPresupuestoUnico();
+      const fecha = new Date(ahoraMs - (plan.length - idx) * 24 * 60 * 60 * 1000);
+      const fechaVenc = new Date(fecha.getTime() + p.validez * 24 * 60 * 60 * 1000);
+
+      let subtotal = 0;
+      p.items.forEach(function (it) { subtotal += it.cant * it.precio; });
+      const total = Math.round(subtotal * 100) / 100;
+      const subRed = Math.round(subtotal * 100) / 100;
+
+      const fechaStr = Utilities.formatDate(fecha, Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+      const fechaVencStr = Utilities.formatDate(fechaVenc, Session.getScriptTimeZone(), 'yyyy-MM-dd');
+
+      let idServicio = '';
+      let fechaAprobacion = '';
+      if (p.estado === ESTADOS_PRESUPUESTO.APROBADO || p.estado === ESTADOS_PRESUPUESTO.COMPLETADO) {
+        const repuestosTxt = p.items.map(function (it) { return it.cant + 'x ' + it.desc; }).join(', ');
+        const descTxt = p.items.map(function (it) { return (it.tipo === 'mano_obra' ? 'MO: ' : '') + it.desc; }).join(' · ');
+        const servicio = altaServicioInterno({
+          idVehiculo: p.vehiculo.ID_Vehiculo,
+          fecha: fecha,
+          kilometraje: 0,
+          descripcion: 'Presupuesto aprobado #' + id + ' · ' + descTxt,
+          repuestos: repuestosTxt,
+          proximoMantenimiento: '',
+          observaciones: 'Generado automáticamente desde presupuesto demo ' + id,
+          fotosIds: '',
+          idMecanico: ''
+        });
+        if (servicio.ok) {
+          idServicio = servicio.id;
+          fechaAprobacion = fechaStr;
+        }
+      }
+
+      sheetP.appendRow([
+        id,
+        fechaStr,
+        fechaVencStr,
+        p.vehiculo.ID_Vehiculo,
+        p.estado,
+        subRed,
+        total,
+        p.validez,
+        token,
+        p.notas,
+        idServicio,
+        fechaAprobacion
+      ]);
+
+      const itemsParaSheet = [];
+      p.items.forEach(function (it) {
+        const idItem = nextId(SHEETS.PRESUPUESTOS_ITEMS, 'PI');
+        const subItem = it.cant * it.precio;
+        itemsParaSheet.push([idItem, id, it.desc, it.cant, it.precio, subItem, it.tipo]);
+      });
+      if (itemsParaSheet.length > 0) {
+        const startRow = sheetI.getLastRow() + 1;
+        sheetI.getRange(startRow, 1, itemsParaSheet.length, COLUMNAS.PRESUPUESTOS_ITEMS.length).setValues(itemsParaSheet);
+      }
+
+      idsCreados.push(id);
+    });
+
+    return {
+      ok: true,
+      mensaje: 'Presupuestos demo cargados correctamente',
+      presupuestosCreados: idsCreados.length,
+      ids: idsCreados,
+      distribucion: {
+        borrador: plan.filter(function (p) { return p.estado === ESTADOS_PRESUPUESTO.BORRADOR; }).length,
+        enviado: plan.filter(function (p) { return p.estado === ESTADOS_PRESUPUESTO.ENVIADO; }).length,
+        aprobado: plan.filter(function (p) { return p.estado === ESTADOS_PRESUPUESTO.APROBADO; }).length,
+        vencido: plan.filter(function (p) { return p.estado === ESTADOS_PRESUPUESTO.VENCIDO; }).length
+      }
+    };
+  } catch (err) {
+    return { ok: false, error: 'No se pudieron cargar los presupuestos demo: ' + (err && err.message ? err.message : err) };
+  }
+}
+
+function limpiarPresupuestosDemo() {
+  try {
+    const sheetP = obtenerSheet(SHEETS.PRESUPUESTOS);
+    const sheetI = obtenerSheet(SHEETS.PRESUPUESTOS_ITEMS);
+
+    let presupuestosEliminados = 0;
+    if (sheetP) {
+      const data = sheetP.getDataRange().getValues();
+      for (let i = data.length - 1; i >= 1; i--) {
+        sheetP.deleteRow(i + 1);
+        presupuestosEliminados++;
+      }
+    }
+
+    let itemsEliminados = 0;
+    if (sheetI) {
+      const data = sheetI.getDataRange().getValues();
+      for (let i = data.length - 1; i >= 1; i--) {
+        sheetI.deleteRow(i + 1);
+        itemsEliminados++;
+      }
+    }
+
+    return {
+      ok: true,
+      mensaje: 'Presupuestos demo eliminados',
+      presupuestosEliminados: presupuestosEliminados,
+      itemsEliminados: itemsEliminados
+    };
+  } catch (err) {
+    return { ok: false, error: 'No se pudieron limpiar los presupuestos: ' + (err && err.message ? err.message : err) };
+  }
+}
+
 function apiLogin(password) {
   try {
     return loginMecanico(password) || { ok: false, error: 'No se pudo procesar el login' };
@@ -800,6 +1764,19 @@ function apiAccion(action, payloadJson, session) {
         case 'altaServicio': resultado = altaServicioInterno(payload); break;
         case 'subirFoto': resultado = subirFoto(payload); break;
         case 'dashboard': resultado = obtenerDashboard(); break;
+        case 'altaTurno': resultado = altaTurnoInterno(payload); break;
+        case 'listarTurnos': resultado = { ok: true, turnos: listarTurnos(payload || {}) }; break;
+        case 'actualizarTurno': resultado = actualizarTurnoInterno(payload); break;
+        case 'cancelarTurno': resultado = cancelarTurnoInterno(payload.id); break;
+        case 'completarTurno': resultado = completarTurnoInterno(payload.id); break;
+        case 'altaPresupuesto': resultado = altaPresupuestoInterno(payload); break;
+        case 'listarPresupuestos': resultado = { ok: true, presupuestos: listarPresupuestos(payload || {}) }; break;
+        case 'obtenerPresupuesto': resultado = obtenerPresupuesto(payload.id); break;
+        case 'actualizarPresupuesto': resultado = actualizarPresupuestoInterno(payload); break;
+        case 'marcarPresupuestoEnviado': resultado = marcarPresupuestoEnviado(payload.id); break;
+        case 'aprobarPresupuesto': resultado = aprobarPresupuesto(payload.token); break;
+        case 'rechazarPresupuesto': resultado = rechazarPresupuesto(payload.token, payload.motivo); break;
+        case 'crearHojaPresupuestos': resultado = crearHojaPresupuestos(); break;
         case 'logout': cerrarSesion(session); resultado = { ok: true }; break;
         default: resultado = { ok: false, error: 'Acción desconocida: ' + action };
       }
@@ -1021,6 +1998,79 @@ function migrarCombustible() {
   }
 
   return { ok: true, mensaje: 'Sin cambios necesarios' };
+}
+
+function migrarQuitarIvaPresupuestos() {
+  try {
+    const ss = SpreadsheetApp.openById(obtenerSheetId());
+    const sheet = ss.getSheetByName('Presupuestos');
+    if (!sheet) return { ok: false, error: 'No existe la hoja Presupuestos' };
+
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const ivaColIndex = headers.indexOf('IVA');
+    const subtotalColIndex = headers.indexOf('Subtotal');
+    const totalColIndex = headers.indexOf('Total');
+
+    if (ivaColIndex === -1) {
+      return { ok: true, mensaje: 'No hay columna IVA, nada que migrar', accion: 'ninguna' };
+    }
+
+    const filasActualizadas = [];
+    if (subtotalColIndex !== -1 && totalColIndex !== -1) {
+      const data = sheet.getDataRange().getValues();
+      for (let i = 1; i < data.length; i++) {
+        const subtotal = data[i][subtotalColIndex];
+        if (typeof subtotal === 'number' && subtotal > 0) {
+          sheet.getRange(i + 1, totalColIndex + 1).setValue(subtotal);
+          filasActualizadas.push({ fila: i + 1, idPresupuesto: String(data[i][0] || ''), totalAnterior: Number(data[i][totalColIndex]) || 0, totalNuevo: subtotal });
+        }
+      }
+    }
+
+    sheet.deleteColumn(ivaColIndex + 1);
+
+    return {
+      ok: true,
+      mensaje: 'Columna IVA eliminada. Total ajustado a Subtotal en ' + filasActualizadas.length + ' fila(s).',
+      accion: 'migracion completa',
+      filasActualizadas: filasActualizadas
+    };
+  } catch (err) {
+    return { ok: false, error: 'No se pudo completar la migracion: ' + (err && err.message ? err.message : err) };
+  }
+}
+
+function crearHojaTurnos() {
+  try {
+    const ss = SpreadsheetApp.openById(obtenerSheetId());
+    let hoja = ss.getSheetByName(SHEETS.TURNOS);
+    if (hoja) {
+      const headersActuales = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0];
+      const headersEsperados = COLUMNAS.TURNOS;
+      const headersCoinciden = headersEsperados.every(function (h, i) { return headersActuales[i] === h; }) &&
+        headersActuales.length === headersEsperados.length;
+      if (headersCoinciden) {
+        return { ok: true, mensaje: 'La hoja Turnos ya existe con headers correctos', accion: 'ninguna' };
+      }
+      hoja.getRange(1, 1, 1, headersEsperados.length)
+        .setValues([headersEsperados])
+        .setFontWeight('bold')
+        .setBackground('#e2e8f0');
+      return { ok: true, mensaje: 'La hoja Turnos ya existía; headers normalizados', accion: 'headers actualizados' };
+    }
+    hoja = ss.insertSheet(SHEETS.TURNOS);
+    hoja.getRange(1, 1, 1, COLUMNAS.TURNOS.length)
+      .setValues([COLUMNAS.TURNOS]);
+    hoja.getRange(1, 1, 1, COLUMNAS.TURNOS.length)
+      .setFontWeight('bold')
+      .setBackground('#e2e8f0');
+    hoja.setFrozenRows(1);
+    hoja.getRange('B2:B').setNumberFormat('yyyy-MM-dd HH:mm');
+    hoja.getRange('I2:I').setNumberFormat('yyyy-MM-dd HH:mm');
+    return { ok: true, mensaje: 'Hoja Turnos creada correctamente', accion: 'creada' };
+  } catch (err) {
+    return { ok: false, error: 'No se pudo crear la hoja Turnos: ' + (err && err.message ? err.message : err) };
+  }
 }
 
 function cargarDatosDemoMasivos() {
@@ -1261,6 +2311,137 @@ function cargarDatosDemoMasivos() {
   };
 }
 
+function cargarTurnosDemo() {
+  try {
+    const sheetRes = crearHojaTurnos();
+    if (!sheetRes.ok) return { ok: false, error: 'No se pudo preparar la hoja Turnos: ' + sheetRes.error };
+
+    const existentes = sheetAObjetos(SHEETS.TURNOS);
+    if (existentes.length > 0) {
+      return { ok: false, mensaje: 'Ya hay turnos cargados. Limpiá primero con limpiarTurnosDemo().', yaCargado: true };
+    }
+
+    const vehiculos = sheetAObjetos(SHEETS.VEHICULOS).filter(function (v) { return esActivo(v.Activo); });
+    if (vehiculos.length === 0) {
+      return { ok: false, error: 'No hay vehículos cargados. Corré primero cargarDatosDemoMasivos().' };
+    }
+
+    const tiposServicio = COLUMNAS_TIPOS_SERVICIO || [
+      'Cambio de aceite', 'Service completo', 'Diagnostico', 'Freno', 'Embrague',
+      'Distribucion', 'Suspension', 'Tren delantero', 'Aire acondicionado', 'Bateria', 'Otro'
+    ];
+
+    const descripcionesPorTipo = {
+      'Cambio de aceite': 'Cliente pide también revisar filtro de aire',
+      'Service completo': 'Service completo según manual',
+      'Diagnostico': 'Vehículo con ruido extraño en el motor',
+      'Freno': 'Pastillas gastadas, pedido de revisión',
+      'Embrague': 'Embrague patinando',
+      'Distribucion': 'Cambio de kit de distribución',
+      'Suspension': 'Amortiguadores vencidos',
+      'Tren delantero': 'Juego de tren delantero nuevo',
+      'Aire acondicionado': 'A/C no enfría correctamente',
+      'Bateria': 'Cambio de batería preventiva',
+      'Otro': 'Revisión general'
+    };
+
+    const ahora = new Date();
+    const semillaFecha = function (diasOffset, hora, minuto) {
+      const d = new Date(ahora);
+      d.setDate(d.getDate() + diasOffset);
+      d.setHours(hora, minuto, 0, 0);
+      return d;
+    };
+
+    const plan = [
+      { dias: -28, hora: 9, min: 0, tipo: 'Service completo', estado: 'completado', duracion: 120, notas: 'Turno demo completado' },
+      { dias: -21, hora: 10, min: 30, tipo: 'Cambio de aceite', estado: 'completado', duracion: 60, notas: '' },
+      { dias: -14, hora: 14, min: 0, tipo: 'Freno', estado: 'completado', duracion: 90, notas: '' },
+      { dias: -7, hora: 11, min: 0, tipo: 'Diagnostico', estado: 'completado', duracion: 45, notas: '' },
+      { dias: -3, hora: 16, min: 0, tipo: 'Service completo', estado: 'cancelado', duracion: 120, notas: 'Cliente canceló a último momento' },
+      { dias: -2, hora: 9, min: 30, tipo: 'Embrague', estado: 'no_show', duracion: 180, notas: 'Cliente no se presentó' },
+      { dias: 0, hora: 9, min: 0, tipo: 'Cambio de aceite', estado: 'confirmado', duracion: 60, notas: '' },
+      { dias: 1, hora: 11, min: 0, tipo: 'Diagnostico', estado: 'confirmado', duracion: 45, notas: '' },
+      { dias: 1, hora: 15, min: 0, tipo: 'Freno', estado: 'confirmado', duracion: 90, notas: 'Traer llave de repuesto' },
+      { dias: 2, hora: 10, min: 0, tipo: 'Aire acondicionado', estado: 'confirmado', duracion: 90, notas: '' },
+      { dias: 3, hora: 14, min: 30, tipo: 'Distribucion', estado: 'confirmado', duracion: 240, notas: '' },
+      { dias: 5, hora: 9, min: 0, tipo: 'Service completo', estado: 'pendiente', duracion: 120, notas: '' },
+      { dias: 7, hora: 16, min: 0, tipo: 'Cambio de aceite', estado: 'pendiente', duracion: 60, notas: '' },
+      { dias: 9, hora: 10, min: 30, tipo: 'Suspension', estado: 'pendiente', duracion: 150, notas: '' },
+      { dias: 12, hora: 11, min: 0, tipo: 'Tren delantero', estado: 'pendiente', duracion: 120, notas: '' },
+      { dias: 15, hora: 9, min: 0, tipo: 'Service completo', estado: 'pendiente', duracion: 120, notas: '' },
+      { dias: 18, hora: 14, min: 0, tipo: 'Bateria', estado: 'pendiente', duracion: 30, notas: '' },
+      { dias: 21, hora: 10, min: 0, tipo: 'Diagnostico', estado: 'pendiente', duracion: 45, notas: '' },
+      { dias: 24, hora: 15, min: 30, tipo: 'Cambio de aceite', estado: 'pendiente', duracion: 60, notas: '' },
+      { dias: 28, hora: 9, min: 30, tipo: 'Otro', estado: 'pendiente', duracion: 60, notas: 'Revisión pre-viaje' }
+    ];
+
+    const sheet = obtenerSheet(SHEETS.TURNOS);
+    const idsCreados = [];
+
+    for (let i = 0; i < plan.length; i++) {
+      const item = plan[i];
+      const vehiculo = vehiculos[i % vehiculos.length];
+      const id = nextId(SHEETS.TURNOS, 'T');
+      const fechaHora = semillaFecha(item.dias, item.hora, item.min);
+      const descripcion = descripcionesPorTipo[item.tipo] || '';
+      sheet.appendRow([
+        id,
+        fechaHora,
+        item.duracion,
+        vehiculo.ID_Vehiculo,
+        item.tipo,
+        descripcion,
+        item.estado,
+        '',
+        ahoraComoString(),
+        item.notas || ''
+      ]);
+      idsCreados.push(id);
+    }
+
+    return {
+      ok: true,
+      mensaje: 'Turnos demo cargados correctamente',
+      turnosCreados: idsCreados.length,
+      ids: idsCreados,
+      distribucion: {
+        completados: plan.filter(function (p) { return p.estado === 'completado'; }).length,
+        confirmados: plan.filter(function (p) { return p.estado === 'confirmado'; }).length,
+        pendientes: plan.filter(function (p) { return p.estado === 'pendiente'; }).length,
+        cancelados: plan.filter(function (p) { return p.estado === 'cancelado'; }).length,
+        noShow: plan.filter(function (p) { return p.estado === 'no_show'; }).length
+      }
+    };
+  } catch (err) {
+    return { ok: false, error: 'No se pudieron cargar los turnos demo: ' + (err && err.message ? err.message : err) };
+  }
+}
+
+function limpiarTurnosDemo() {
+  try {
+    const sheet = obtenerSheet(SHEETS.TURNOS);
+    if (!sheet) return { ok: false, error: 'No existe la hoja Turnos' };
+    const data = sheet.getDataRange().getValues();
+    if (data.length <= 1) {
+      return { ok: true, mensaje: 'La hoja Turnos ya estaba vacía', turnosEliminados: 0 };
+    }
+    let eliminados = 0;
+    for (let i = data.length - 1; i >= 1; i--) {
+      sheet.deleteRow(i + 1);
+      eliminados++;
+    }
+    return { ok: true, mensaje: 'Se eliminaron todos los turnos', turnosEliminados: eliminados };
+  } catch (err) {
+    return { ok: false, error: 'No se pudieron limpiar los turnos: ' + (err && err.message ? err.message : err) };
+  }
+}
+
+const COLUMNAS_TIPOS_SERVICIO = [
+  'Cambio de aceite', 'Service completo', 'Diagnostico', 'Freno', 'Embrague',
+  'Distribucion', 'Suspension', 'Tren delantero', 'Aire acondicionado', 'Bateria', 'Otro'
+];
+
 function limpiarDatosDemo() {
   const ss = SpreadsheetApp.openById(obtenerSheetId());
   const sheetClientes = ss.getSheetByName('Clientes');
@@ -1333,9 +2514,60 @@ function limpiarDatosDemo() {
     }
   }
 
+  const sheetTurnos = ss.getSheetByName('Turnos');
+  if (sheetTurnos) {
+    const data = sheetTurnos.getDataRange().getValues();
+    const idVehiculoCol = data[0].indexOf('ID_Vehiculo');
+
+    for (let i = data.length - 1; i >= 1; i--) {
+      const idVehiculo = String(data[i][idVehiculoCol] || '').trim();
+      if (vehiculosEliminadosIds.indexOf(idVehiculo) !== -1) {
+        sheetTurnos.deleteRow(i + 1);
+        reporte.turnosEliminados = (reporte.turnosEliminados || 0) + 1;
+      }
+    }
+  }
+
+  const presupuestosEliminadosIds = [];
+  const sheetPresupuestos = ss.getSheetByName('Presupuestos');
+  if (sheetPresupuestos) {
+    const data = sheetPresupuestos.getDataRange().getValues();
+    const idCol = data[0].indexOf('ID_Presupuesto');
+    const idVehiculoCol = data[0].indexOf('ID_Vehiculo');
+
+    for (let i = data.length - 1; i >= 1; i--) {
+      const idVehiculo = String(data[i][idVehiculoCol] || '').trim();
+      if (vehiculosEliminadosIds.indexOf(idVehiculo) !== -1) {
+        presupuestosEliminadosIds.push(String(data[i][idCol]));
+        sheetPresupuestos.deleteRow(i + 1);
+        reporte.presupuestosEliminados = (reporte.presupuestosEliminados || 0) + 1;
+      }
+    }
+  }
+
+  const sheetPresupuestosItems = ss.getSheetByName('Presupuestos_Items');
+  if (sheetPresupuestosItems) {
+    const data = sheetPresupuestosItems.getDataRange().getValues();
+    const idPresupuestoCol = data[0].indexOf('ID_Presupuesto');
+
+    for (let i = data.length - 1; i >= 1; i--) {
+      const idPresupuesto = String(data[i][idPresupuestoCol] || '').trim();
+      if (presupuestosEliminadosIds.indexOf(idPresupuesto) !== -1) {
+        sheetPresupuestosItems.deleteRow(i + 1);
+        reporte.presupuestosItemsEliminados = (reporte.presupuestosItemsEliminados || 0) + 1;
+      }
+    }
+  }
+
   reporte.clientesRestantes = Math.max(0, sheetClientes.getLastRow() - 1);
   reporte.vehiculosRestantes = Math.max(0, sheetVehiculos.getLastRow() - 1);
   reporte.serviciosRestantes = Math.max(0, sheetServicios.getLastRow() - 1);
+  const sheetTurnosRef = ss.getSheetByName('Turnos');
+  reporte.turnosRestantes = sheetTurnosRef ? Math.max(0, sheetTurnosRef.getLastRow() - 1) : 0;
+  const sheetPresupuestosRef = ss.getSheetByName('Presupuestos');
+  reporte.presupuestosRestantes = sheetPresupuestosRef ? Math.max(0, sheetPresupuestosRef.getLastRow() - 1) : 0;
+  const sheetPresupuestosItemsRef = ss.getSheetByName('Presupuestos_Items');
+  reporte.presupuestosItemsRestantes = sheetPresupuestosItemsRef ? Math.max(0, sheetPresupuestosItemsRef.getLastRow() - 1) : 0;
 
   return {
     ok: true,

@@ -1035,6 +1035,653 @@
     @media (max-width: 480px) {
       .header-contact { font-size: 11px; padding: 5px 8px; }
     }
+
+    .estado-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #ffffff;
+    }
+    .estado-pendiente { background: #f59e0b; }
+    .estado-confirmado { background: #3b82f6; }
+    .estado-completado { background: #10b981; }
+    .estado-cancelado { background: #6b7280; }
+    .estado-no_show { background: #ef4444; }
+
+    .agenda-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .agenda-view-switcher {
+      display: inline-flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 3px;
+      gap: 2px;
+    }
+    .view-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: var(--radius-lg);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .view-btn:hover { color: var(--text); }
+    .view-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .cal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .cal-header h2 {
+      margin: 0;
+      font-family: 'Oswald', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text);
+    }
+    .cal-nav-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-family: inherit;
+      transition: background 0.15s, color 0.15s;
+    }
+    .cal-nav-btn:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+    .cal-today-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 8px 14px;
+      border-radius: var(--radius-lg);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .cal-today-btn:hover { color: var(--primary); border-color: var(--primary); }
+
+    .cal-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+    .cal-weekdays span {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 6px 0;
+    }
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+    .cal-day {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      min-height: 88px;
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      overflow: hidden;
+    }
+    .cal-day:hover { border-color: var(--primary); background: var(--primary-50); }
+    .cal-day.other-month { opacity: 0.4; }
+    .cal-day.today { border-color: var(--primary); border-width: 2px; }
+    .cal-day-num {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+      align-self: flex-start;
+    }
+    .cal-day.today .cal-day-num {
+      background: var(--primary);
+      color: #ffffff;
+      border-radius: 50%;
+      width: 22px; height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .cal-turno-chip {
+      background: var(--primary);
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.4;
+    }
+    .cal-turno-chip.estado-pendiente { background: #f59e0b; }
+    .cal-turno-chip.estado-confirmado { background: #3b82f6; }
+    .cal-turno-chip.estado-completado { background: #10b981; }
+    .cal-turno-chip.estado-cancelado { background: #6b7280; }
+    .cal-turno-chip.estado-no_show { background: #ef4444; }
+    .cal-more {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-align: center;
+      padding-top: 2px;
+    }
+
+    .lista-day-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .lista-day-header {
+      font-family: 'Oswald', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--primary);
+      padding-bottom: 10px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .lista-day-count {
+      font-family: 'Inter', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .lista-turno-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--primary);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.1s;
+    }
+    .lista-turno-card:hover { border-color: var(--primary); transform: translateX(2px); }
+    .lista-turno-card.estado-pendiente { border-left-color: #f59e0b; }
+    .lista-turno-card.estado-confirmado { border-left-color: #3b82f6; }
+    .lista-turno-card.estado-completado { border-left-color: #10b981; }
+    .lista-turno-card.estado-cancelado { border-left-color: #6b7280; }
+    .lista-turno-card.estado-no_show { border-left-color: #ef4444; }
+    .lista-turno-time {
+      font-family: 'Oswald', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0.04em;
+    }
+    .lista-turno-body {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+    .lista-turno-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .lista-turno-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .lista-turno-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .lista-turno-estado {
+      flex-shrink: 0;
+      align-self: flex-start;
+    }
+    .lista-turno-descripcion {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      font-style: italic;
+    }
+    .lista-turno-notas {
+      font-size: 12px;
+      color: var(--warning-dark);
+      margin-top: 6px;
+      background: var(--warning-light);
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--warning);
+    }
+
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 16px;
+      overflow-y: auto;
+    }
+    .modal-backdrop.open { display: flex; animation: fadeIn 0.2s ease-out; }
+    .modal-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 560px;
+      padding: 20px;
+      margin: 16px 0;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      animation: fadeIn 0.2s ease-out;
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-header h2 {
+      margin: 0;
+      font-family: 'Oswald', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 24px;
+      cursor: pointer;
+      width: 32px; height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      padding: 0;
+      line-height: 1;
+      font-family: inherit;
+    }
+    .modal-close:hover { background: var(--danger-light); color: var(--danger); }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .modal-actions .btn { flex: 1; }
+    .modal-turno-info-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+    .modal-turno-info-box strong { color: var(--text); }
+
+    .pres-toolbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .pres-toolbar .pres-select {
+      flex: 0 0 auto;
+      min-width: 140px;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .pres-toolbar .pres-input {
+      flex: 1 1 200px;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .pres-resumen {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .pres-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      text-align: left;
+    }
+    .pres-stat-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .pres-stat-value {
+      font-family: 'Oswald', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .pres-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color 0.2s;
+    }
+    .pres-card:hover { border-color: var(--primary); }
+    .pres-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .pres-card-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+    .pres-card-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .pres-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border: 1px solid;
+    }
+    .pres-badge.borrador { background: rgba(245, 158, 11, 0.15); color: var(--warning-dark); border-color: var(--warning); }
+    .pres-badge.enviado { background: rgba(59, 130, 246, 0.15); color: #93c5fd; border-color: #3b82f6; }
+    .pres-badge.aprobado { background: rgba(16, 185, 129, 0.15); color: var(--success-dark); border-color: var(--success); }
+    .pres-badge.rechazado { background: rgba(239, 68, 68, 0.15); color: var(--danger-dark); border-color: var(--danger); }
+    .pres-badge.vencido { background: rgba(107, 114, 128, 0.15); color: #d1d5db; border-color: #6b7280; }
+    .pres-badge.completado { background: rgba(5, 150, 105, 0.15); color: #6ee7b7; border-color: #059669; }
+    .pres-card-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .pres-card-body strong { color: var(--text); font-weight: 600; }
+    .pres-card-total {
+      font-family: 'Oswald', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+      text-align: right;
+    }
+    .pres-card-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .pres-card-actions .btn { flex: 1; min-width: 0; }
+    .pres-empty {
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 32px 16px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+    .pres-item-row {
+      display: grid;
+      grid-template-columns: 130px 1fr 70px 110px 90px 32px;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .pres-item-row select,
+    .pres-item-row input {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      min-width: 0;
+      width: 100%;
+    }
+    .pres-item-subtotal {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      text-align: right;
+      padding: 0 6px;
+    }
+    .btn-remove-item {
+      background: var(--danger-light);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      font-family: inherit;
+    }
+    .btn-remove-item:hover { background: var(--danger); color: #fff; }
+    .pres-totals {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      margin-top: 14px;
+      margin-bottom: 14px;
+    }
+    .pres-totals-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .pres-totals-row.total {
+      border-top: 1px solid var(--border);
+      margin-top: 6px;
+      padding-top: 10px;
+      font-family: 'Oswald', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .pres-form-section { margin-bottom: 12px; }
+    .pres-form-section label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .pres-form-section select,
+    .pres-form-section input,
+    .pres-form-section textarea {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      width: 100%;
+    }
+    .pres-detalles-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    .pres-detalles-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 13px;
+      gap: 12px;
+    }
+    .pres-detalles-row span:first-child { color: var(--text-muted); }
+    .pres-detalles-row span:last-child { color: var(--text); font-weight: 600; text-align: right; }
+    .pres-items-tabla {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 14px;
+      font-size: 13px;
+    }
+    .pres-items-tabla th,
+    .pres-items-tabla td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .pres-items-tabla th {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      font-weight: 700;
+    }
+    .pres-items-tabla td.num { text-align: right; }
+    .pres-items-tabla td.tipo {
+      text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+    .pres-url-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--text);
+      word-break: break-all;
+      margin-bottom: 8px;
+    }
+    .pres-wa-text {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      font-size: 13px;
+      color: var(--text);
+      line-height: 1.6;
+      white-space: pre-wrap;
+      margin-bottom: 12px;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+    @media (max-width: 720px) {
+      .pres-item-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .pres-item-row .pres-item-subtotal,
+      .pres-item-row .btn-remove-item {
+        grid-column: span 1;
+      }
+      .pres-card-body { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 600px) {
+      .cal-day { min-height: 70px; padding: 4px; }
+      .cal-day-num { font-size: 11px; }
+      .cal-turno-chip { font-size: 9px; padding: 1px 4px; }
+      .cal-weekdays span { font-size: 10px; padding: 4px 0; }
+      .modal-card { padding: 16px; }
+    }
   </style>
 </head>
 <body>
@@ -1062,6 +1709,8 @@
     <nav id="sidebarNav">
       <button class="nav-item active" data-target="sec-inicio"><span class="nav-icon">▦</span><span class="nav-label">Inicio</span></button>
       <button class="nav-item" data-target="sec-servicio"><span class="nav-icon">▤</span><span class="nav-label">Servicio</span></button>
+      <button class="nav-item" data-target="sec-agenda"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z"/></svg></span><span class="nav-label">Agenda</span></button>
+      <button class="nav-item" data-target="sec-presupuestos"><span class="nav-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 14H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></span><span class="nav-label">Presupuestos</span></button>
       <button class="nav-item" data-target="sec-nuevo"><span class="nav-icon">⊕</span><span class="nav-label">Nuevo vehículo</span></button>
       <button class="nav-item" data-target="sec-historial"><span class="nav-icon">◷</span><span class="nav-label">Historial</span></button>
       <button class="nav-item" data-target="sec-qrs"><span class="nav-icon">▣</span><span class="nav-label">Mis QRs</span></button>
@@ -1306,6 +1955,36 @@
       </div>
     </section>
 
+    <section id="sec-agenda" class="section">
+      <div class="agenda-toolbar">
+        <div class="agenda-view-switcher" id="agendaViewSwitcher">
+          <button class="view-btn active" data-view="calendario" type="button">Calendario</button>
+          <button class="view-btn" data-view="lista" type="button">Lista</button>
+        </div>
+        <button class="btn btn-sm" id="btnNuevoTurno" type="button">+ Nuevo Turno</button>
+      </div>
+
+      <div id="agendaViewCalendario" class="agenda-view">
+        <div class="cal-header">
+          <button class="cal-nav-btn" id="calPrev" type="button" aria-label="Mes anterior">‹</button>
+          <h2 id="calMonthYear">—</h2>
+          <button class="cal-nav-btn" id="calNext" type="button" aria-label="Mes siguiente">›</button>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <button class="cal-today-btn" id="calToday" type="button">Hoy</button>
+          <span id="calContador" style="font-size:12px; color:var(--text-muted); font-weight:600;"></span>
+        </div>
+        <div class="cal-weekdays">
+          <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+
+      <div id="agendaViewLista" class="agenda-view" style="display:none;">
+        <div id="listaProximos"></div>
+      </div>
+    </section>
+
     <section id="sec-historial" class="section">
       <div class="card">
         <div class="card-title">Buscar vehículo</div>
@@ -1321,6 +2000,25 @@
           </div>
         </div>
       </div>
+    </section>
+
+    <section id="sec-presupuestos" class="section">
+      <div class="pres-toolbar">
+        <select id="presFiltroEstado" class="pres-select">
+          <option value="">Todos los estados</option>
+          <option value="borrador">Borrador</option>
+          <option value="enviado">Enviado</option>
+          <option value="aprobado">Aprobado</option>
+          <option value="rechazado">Rechazado</option>
+          <option value="vencido">Vencido</option>
+          <option value="completado">Completado</option>
+        </select>
+        <input type="text" id="presBuscar" class="pres-input" placeholder="Buscar por patente, cliente o ID">
+        <button class="btn btn-sm" id="btnNuevoPresupuesto" type="button">+ Nuevo Presupuesto</button>
+      </div>
+
+      <div id="presupuestosResumen" class="pres-resumen"></div>
+      <div id="presupuestosContainer"></div>
     </section>
 
     <section id="sec-qrs" class="section">
@@ -1341,6 +2039,14 @@
       <span class="icon">▤</span>
       Servicio
     </button>
+    <button class="tab" data-target="sec-agenda">
+      <span class="icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z"/></svg></span>
+      Agenda
+    </button>
+    <button class="tab" data-target="sec-presupuestos">
+      <span class="icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 14H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg></span>
+      Presup.
+    </button>
     <button class="tab" data-target="sec-historial">
       <span class="icon">◷</span>
       Historial
@@ -1360,6 +2066,151 @@
 
   <div id="lightbox" class="lightbox" onclick="cerrarLightbox()">
     <img id="lightbox-img" src="" alt="">
+  </div>
+
+  <div id="turnoModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="turnoModalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 id="turnoModalTitle">Nuevo turno</h2>
+        <button class="modal-close" id="turnoModalClose" type="button" aria-label="Cerrar">&times;</button>
+      </div>
+      <div id="turnoEditInfo" class="modal-turno-info-box" style="display:none;"></div>
+
+      <form id="turnoForm" autocomplete="off">
+        <input type="hidden" id="turnoId" value="">
+
+        <label>Vehículo *</label>
+        <input type="text" id="turnoVehiculoBuscar" placeholder="Buscar por patente, marca o cliente">
+        <div id="turnoVehiculoResultados" class="search-results" style="display:none;"></div>
+        <div id="turnoVehiculoSeleccionado" class="selected-vehicle-card" style="display:none; margin-bottom:14px;">
+          <div class="selected-vehicle-icon">✓</div>
+          <div class="selected-vehicle-info">
+            <div class="selected-vehicle-title" id="turnoVehiculoInfo">—</div>
+            <div class="selected-vehicle-meta" id="turnoVehiculoMeta">—</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="btnCambiarTurnoVehiculo" type="button">Cambiar</button>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Fecha *</label>
+            <input type="date" id="turnoFecha" required>
+          </div>
+          <div>
+            <label>Hora *</label>
+            <input type="time" id="turnoHora" required>
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Duración (min)</label>
+            <input type="number" id="turnoDuracion" value="60" min="15" step="15">
+          </div>
+          <div>
+            <label>Estado</label>
+            <select id="turnoEstado">
+              <option value="pendiente">Pendiente</option>
+              <option value="confirmado">Confirmado</option>
+              <option value="completado">Completado</option>
+              <option value="cancelado">Cancelado</option>
+              <option value="no_show">No se presentó</option>
+            </select>
+          </div>
+        </div>
+
+        <label>Tipo de servicio *</label>
+        <select id="turnoTipo" required>
+          <option value="">Seleccionar...</option>
+          <option value="Cambio de aceite">Cambio de aceite</option>
+          <option value="Service completo">Service completo</option>
+          <option value="Diagnostico">Diagnóstico</option>
+          <option value="Freno">Freno</option>
+          <option value="Embrague">Embrague</option>
+          <option value="Distribucion">Distribución</option>
+          <option value="Suspension">Suspensión</option>
+          <option value="Tren delantero">Tren delantero</option>
+          <option value="Aire acondicionado">Aire acondicionado</option>
+          <option value="Bateria">Batería</option>
+          <option value="Otro">Otro</option>
+        </select>
+
+        <label>Descripción / motivo</label>
+        <textarea id="turnoDescripcion" rows="2" placeholder="Ej: Cliente pide también revisar filtro de aire"></textarea>
+
+        <label>Notas internas</label>
+        <textarea id="turnoNotas" rows="2" placeholder="Ej: Traer llave de repuesto"></textarea>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-danger" id="btnCancelarTurno" style="display:none;">Cancelar turno</button>
+          <button type="button" class="btn btn-success" id="btnCompletarTurno" style="display:none;">Marcar completado</button>
+          <button type="submit" class="btn" id="btnGuardarTurno">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="presupuestoModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="presupuestoModalTitle">
+    <div class="modal-card" style="max-width: 720px;">
+      <div class="modal-header">
+        <h2 id="presupuestoModalTitle">Nuevo Presupuesto</h2>
+        <button class="modal-close" id="presupuestoModalClose" type="button" aria-label="Cerrar">&times;</button>
+      </div>
+
+      <form id="presupuestoForm" autocomplete="off">
+        <input type="hidden" id="presId" value="">
+
+        <div class="pres-form-section">
+          <label>Vehículo *</label>
+          <input type="text" id="presVehiculoBuscar" placeholder="Buscar por patente, marca o cliente">
+          <div id="presVehiculoResultados" class="search-results" style="display:none;"></div>
+          <div id="presVehiculoSeleccionado" class="selected-vehicle-card" style="display:none; margin-top:8px;">
+            <div class="selected-vehicle-icon">✓</div>
+            <div class="selected-vehicle-info">
+              <div class="selected-vehicle-title" id="presVehiculoInfo">—</div>
+              <div class="selected-vehicle-meta" id="presVehiculoMeta">—</div>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btnCambiarPresVehiculo" type="button">Cambiar</button>
+          </div>
+        </div>
+
+        <div class="pres-form-section">
+          <label>Validez (días)</label>
+          <input type="number" id="presValidez" value="15" min="1" max="365">
+        </div>
+
+        <div class="pres-form-section">
+          <label>Notas</label>
+          <textarea id="presNotas" rows="2" placeholder="Ej: Cliente frecuente, descuento 10%"></textarea>
+        </div>
+
+        <div class="pres-form-section">
+          <label>Items *</label>
+          <div id="presItemsContainer"></div>
+          <button type="button" class="btn btn-secondary btn-sm" id="btnAddItem" style="margin-top:6px;">+ Agregar item</button>
+        </div>
+
+        <div class="pres-totals">
+          <div class="pres-totals-row total"><span>Total</span><span>$<span id="presTotal">0</span></span></div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="submit" class="btn" id="btnGuardarPresupuesto">Guardar borrador</button>
+          <button type="button" class="btn btn-secondary" id="btnCancelarPresupuesto">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="presupuestoDetalleModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="presupuestoDetalleTitle">
+    <div class="modal-card" style="max-width: 720px;">
+      <div class="modal-header">
+        <h2 id="presupuestoDetalleTitle">Detalle de Presupuesto</h2>
+        <button class="modal-close" id="presupuestoDetalleClose" type="button" aria-label="Cerrar">&times;</button>
+      </div>
+
+      <div id="presDetalleBody"></div>
+    </div>
   </div>
 
   <script src="https://unpkg.com/qr-code-styling@1.6.0-rc.1/lib/qr-code-styling.js"></script>
@@ -1617,6 +2468,8 @@
       });
       if (target === 'sec-inicio') loadDashboard();
       if (target === 'sec-qrs') loadQrs();
+      if (target === 'sec-agenda') loadAgenda();
+      if (target === 'sec-presupuestos') loadPresupuestos();
     }
 
     document.querySelectorAll('[data-target]').forEach(function (el) {
@@ -1646,8 +2499,21 @@
       wizardStep: 1,
       totalServiciosCache: 0,
       vehiculosCache: [],
-      dashboard: null
+      dashboard: null,
+      turnos: [],
+      agendaView: 'calendario',
+      calYear: 0,
+      calMonth: 0,
+      editingTurnoId: null,
+      turnoVehiculoId: null,
+      turnoVehiculoInfo: null
     };
+
+    (function initAgendaState() {
+      const now = new Date();
+      state.calYear = now.getFullYear();
+      state.calMonth = now.getMonth();
+    })();
 
     function setWizardStep(n) {
       state.wizardStep = n;
@@ -2273,6 +3139,1013 @@
         });
       });
     }
+
+    function initAgendaHelpers() {
+      const switcher = document.getElementById('agendaViewSwitcher');
+      if (switcher) {
+        switcher.querySelectorAll('.view-btn').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            const view = btn.dataset.view;
+            if (!view) return;
+            state.agendaView = view;
+            switcher.querySelectorAll('.view-btn').forEach(function (b) { b.classList.toggle('active', b === btn); });
+            const calView = document.getElementById('agendaViewCalendario');
+            const listView = document.getElementById('agendaViewLista');
+            if (calView) calView.style.display = (view === 'calendario') ? '' : 'none';
+            if (listView) listView.style.display = (view === 'lista') ? '' : 'none';
+            renderAgenda();
+          });
+        });
+      }
+      const btnNuevo = document.getElementById('btnNuevoTurno');
+      if (btnNuevo) btnNuevo.addEventListener('click', function () { abrirModalTurno(null); });
+      const btnPrev = document.getElementById('calPrev');
+      if (btnPrev) btnPrev.addEventListener('click', function () { navegarMes(-1); });
+      const btnNext = document.getElementById('calNext');
+      if (btnNext) btnNext.addEventListener('click', function () { navegarMes(1); });
+      const btnToday = document.getElementById('calToday');
+      if (btnToday) btnToday.addEventListener('click', function () { irAHoy(); });
+
+      const closeBtn = document.getElementById('turnoModalClose');
+      if (closeBtn) closeBtn.addEventListener('click', cerrarModalTurno);
+      const backdrop = document.getElementById('turnoModal');
+      if (backdrop) {
+        backdrop.addEventListener('click', function (e) {
+          if (e.target === backdrop) cerrarModalTurno();
+        });
+      }
+
+      const btnCambiar = document.getElementById('btnCambiarTurnoVehiculo');
+      if (btnCambiar) btnCambiar.addEventListener('click', function () {
+        state.turnoVehiculoId = null;
+        state.turnoVehiculoInfo = null;
+        document.getElementById('turnoVehiculoSeleccionado').style.display = 'none';
+        document.getElementById('turnoVehiculoBuscar').value = '';
+        document.getElementById('turnoVehiculoBuscar').style.display = '';
+        document.getElementById('turnoVehiculoBuscar').focus();
+      });
+
+      const form = document.getElementById('turnoForm');
+      if (form) form.addEventListener('submit', guardarTurnoSubmit);
+      const btnCompletar = document.getElementById('btnCompletarTurno');
+      if (btnCompletar) btnCompletar.addEventListener('click', completarTurnoActual);
+      const btnCancelar = document.getElementById('btnCancelarTurno');
+      if (btnCancelar) btnCancelar.addEventListener('click', cancelarTurnoActual);
+
+      let turnoVehiculoTimer;
+      const turnoVehiculoInput = document.getElementById('turnoVehiculoBuscar');
+      if (turnoVehiculoInput) {
+        turnoVehiculoInput.addEventListener('input', function (e) {
+          clearTimeout(turnoVehiculoTimer);
+          const q = e.target.value.trim();
+          turnoVehiculoTimer = setTimeout(function () { buscarVehiculosParaTurno(q); }, 250);
+        });
+      }
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+          const modal = document.getElementById('turnoModal');
+          if (modal && modal.classList.contains('open')) cerrarModalTurno();
+        }
+      });
+    }
+
+    async function loadAgenda() {
+      const grid = document.getElementById('calGrid');
+      if (grid) grid.innerHTML = '<div style="grid-column:1/-1; padding:20px; text-align:center;"><div class="spinner" style="border-color: var(--border-strong); border-top-color: var(--primary); margin: 0 auto;"></div><p style="margin-top:10px; color:var(--text-muted); font-size:13px;">Cargando turnos...</p></div>';
+      const lista = document.getElementById('listaProximos');
+      if (lista) lista.innerHTML = '<div class="card"><div class="empty-state"><div class="spinner" style="border-color: var(--border-strong); border-top-color: var(--primary); margin: 0 auto;"></div><p style="margin-top:10px;">Cargando turnos...</p></div></div>';
+
+      const r = await api('listarTurnos', {});
+      if (!apiOk(r)) {
+        mostrarToast('No se pudieron cargar los turnos: ' + apiError(r), 'error');
+        if (grid) grid.innerHTML = '<div style="grid-column:1/-1; padding:20px; text-align:center; color:var(--danger); font-size:13px;">Error cargando turnos</div>';
+        if (lista) lista.innerHTML = '<div class="card"><div class="empty-state"><div class="empty-icon">!</div><h3>No se pudieron cargar los turnos</h3><p>' + escapeHtml(apiError(r)) + '</p></div></div>';
+        return;
+      }
+      state.turnos = (r && r.turnos) || [];
+      renderAgenda();
+    }
+
+    function renderAgenda() {
+      if (state.agendaView === 'calendario') renderCalendario();
+      else renderLista();
+    }
+
+    function renderCalendario() {
+      const titulo = document.getElementById('calMonthYear');
+      const nombresMes = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+      if (titulo) titulo.textContent = nombresMes[state.calMonth] + ' ' + state.calYear;
+
+      const turnosPorFecha = {};
+      state.turnos.forEach(function (t) {
+        const k = fechaKeyLocal(t.Fecha_Hora);
+        if (!k) return;
+        if (!turnosPorFecha[k]) turnosPorFecha[k] = [];
+        turnosPorFecha[k].push(t);
+      });
+      Object.keys(turnosPorFecha).forEach(function (k) {
+        turnosPorFecha[k].sort(function (a, b) {
+          return new Date(a.Fecha_Hora).getTime() - new Date(b.Fecha_Hora).getTime();
+        });
+      });
+
+      const grid = document.getElementById('calGrid');
+      if (!grid) return;
+      const cells = construirCeldasCalendario(state.calYear, state.calMonth);
+      const hoy = new Date();
+      const hoyKey = fechaKeyLocal(hoy);
+      let totalVisibles = 0;
+
+      grid.innerHTML = cells.map(function (cell) {
+        const key = fechaKeyLocal(cell.date);
+        const turnos = turnosPorFecha[key] || [];
+        totalVisibles += turnos.length;
+        const otros = !cell.currentMonth ? ' other-month' : '';
+        const hoyClass = (key === hoyKey) ? ' today' : '';
+        const visible = turnos.slice(0, 3);
+        const resto = turnos.length - visible.length;
+        const chipsHtml = visible.map(function (t) {
+          const hora = formatHoraLocal(t.Fecha_Hora);
+          const estado = String(t.Estado || 'pendiente');
+          const tipoCorto = String(t.Tipo_Servicio || '').split(' ')[0];
+          const label = hora + ' ' + (tipoCorto || '');
+          const safeLabel = escapeHtml(label);
+          const idSafe = escapeHtml(String(t.ID_Turno));
+          return '<div class="cal-turno-chip estado-' + escapeHtml(estado) + '" data-turno-id="' + idSafe + '" title="' + escapeHtml(hora + ' · ' + (t.Tipo_Servicio || '') + ' · ' + (t.Patente || '')) + '">' + safeLabel + '</div>';
+        }).join('');
+        const masHtml = resto > 0 ? '<div class="cal-more">+' + resto + ' más</div>' : '';
+        return '<div class="cal-day' + otros + hoyClass + '" data-fecha="' + key + '">' +
+          '<div class="cal-day-num">' + cell.date.getDate() + '</div>' +
+          chipsHtml + masHtml +
+          '</div>';
+      }).join('');
+
+      grid.querySelectorAll('.cal-day').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+          if (e.target.classList.contains('cal-turno-chip')) return;
+          const fechaStr = el.dataset.fecha;
+          if (fechaStr) abrirModalTurnoConFecha(fechaStr);
+        });
+      });
+      grid.querySelectorAll('.cal-turno-chip').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+          e.stopPropagation();
+          const id = el.dataset.turnoId;
+          const t = state.turnos.find(function (x) { return String(x.ID_Turno) === String(id); });
+          if (t) abrirModalTurno(t);
+        });
+      });
+
+      const contador = document.getElementById('calContador');
+      if (contador) {
+        contador.textContent = totalVisibles + ' turno' + (totalVisibles === 1 ? '' : 's') + ' este mes';
+      }
+    }
+
+    function construirCeldasCalendario(year, month) {
+      const cells = [];
+      const primerDia = new Date(year, month, 1);
+      const ultimoDia = new Date(year, month + 1, 0);
+      const diasEnMes = ultimoDia.getDate();
+      const startWeekday = (primerDia.getDay() + 6) % 7;
+      for (let i = 0; i < startWeekday; i++) {
+        const d = new Date(year, month, -startWeekday + i + 1);
+        cells.push({ date: d, currentMonth: false });
+      }
+      for (let d = 1; d <= diasEnMes; d++) {
+        cells.push({ date: new Date(year, month, d), currentMonth: true });
+      }
+      while (cells.length < 42) {
+        const last = cells[cells.length - 1].date;
+        const next = new Date(last);
+        next.setDate(next.getDate() + 1);
+        cells.push({ date: next, currentMonth: false });
+      }
+      return cells;
+    }
+
+    function navegarMes(delta) {
+      state.calMonth += delta;
+      if (state.calMonth < 0) { state.calMonth = 11; state.calYear--; }
+      else if (state.calMonth > 11) { state.calMonth = 0; state.calYear++; }
+      renderCalendario();
+    }
+
+    function irAHoy() {
+      const now = new Date();
+      state.calYear = now.getFullYear();
+      state.calMonth = now.getMonth();
+      renderCalendario();
+    }
+
+    function renderLista() {
+      const cont = document.getElementById('listaProximos');
+      if (!cont) return;
+      const ahora = new Date();
+      ahora.setHours(0, 0, 0, 0);
+      const fin = new Date(ahora);
+      fin.setDate(fin.getDate() + 7);
+
+      const turnosPorDia = {};
+      const nombresDia = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+      const nombresMesCorto = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+      state.turnos.forEach(function (t) {
+        const d = new Date(t.Fecha_Hora);
+        if (isNaN(d.getTime())) return;
+        if (d < ahora || d >= fin) return;
+        const k = fechaKeyLocal(d);
+        if (!turnosPorDia[k]) turnosPorDia[k] = [];
+        turnosPorDia[k].push(t);
+      });
+
+      const secciones = [];
+      for (let offset = 0; offset < 7; offset++) {
+        const d = new Date(ahora);
+        d.setDate(d.getDate() + offset);
+        const k = fechaKeyLocal(d);
+        const turnos = (turnosPorDia[k] || []).slice().sort(function (a, b) {
+          return new Date(a.Fecha_Hora).getTime() - new Date(b.Fecha_Hora).getTime();
+        });
+        const diaSemana = offset === 0 ? 'Hoy' : (offset === 1 ? 'Mañana' : nombresDia[d.getDay()]);
+        const fechaLarga = d.getDate() + ' ' + nombresMesCorto[d.getMonth()];
+        secciones.push({ key: k, diaSemana: diaSemana, fechaLarga: fechaLarga, turnos: turnos });
+      }
+
+      const totalTurnos = secciones.reduce(function (acc, s) { return acc + s.turnos.length; }, 0);
+      if (totalTurnos === 0) {
+        cont.innerHTML = '<div class="card"><div class="empty-state"><div class="empty-icon"><svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor" aria-hidden="true"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z"/></svg></div><h3>Sin turnos próximos</h3><p>No hay turnos en los próximos 7 días</p><button class="btn" onclick="abrirModalTurno(null)">+ Nuevo Turno</button></div></div>';
+        return;
+      }
+
+      cont.innerHTML = secciones.map(function (sec) {
+        const inner = sec.turnos.length === 0
+          ? '<div style="font-size:13px; color:var(--text-muted); font-style:italic;">Sin turnos</div>'
+          : sec.turnos.map(function (t) {
+              const hora = formatHoraLocal(t.Fecha_Hora);
+              const vehiculoTxt = (t.Patente || '—') + ' · ' + (t.Marca || '') + ' ' + (t.Modelo || '');
+              const clienteTxt = t.clienteNombre ? t.clienteNombre + (t.Telefono_Cliente ? ' · ' + t.Telefono_Cliente : '') : '';
+              const estado = String(t.Estado || 'pendiente');
+              const estadoTxt = estado.replace('_', ' ');
+              const idSafe = escapeHtml(String(t.ID_Turno));
+              const descripcionHtml = t.Descripcion ? '<div class="lista-turno-descripcion">' + escapeHtml(t.Descripcion) + '</div>' : '';
+              const notasHtml = t.Notas ? '<div class="lista-turno-notas">Notas: ' + escapeHtml(t.Notas) + '</div>' : '';
+              return '<div class="lista-turno-card estado-' + escapeHtml(estado) + '" data-turno-id="' + idSafe + '">' +
+                '<div class="lista-turno-time">' + hora + '</div>' +
+                '<div class="lista-turno-body">' +
+                  '<div class="lista-turno-info">' +
+                    '<div class="lista-turno-title">' + escapeHtml(t.Tipo_Servicio || '—') + '</div>' +
+                    '<div class="lista-turno-meta">' + escapeHtml(vehiculoTxt) + '</div>' +
+                    (clienteTxt ? '<div class="lista-turno-meta">' + escapeHtml(clienteTxt) + '</div>' : '') +
+                  '</div>' +
+                  '<div class="lista-turno-estado"><span class="estado-badge estado-' + escapeHtml(estado) + '">' + escapeHtml(estadoTxt) + '</span></div>' +
+                '</div>' +
+                descripcionHtml + notasHtml +
+              '</div>';
+            }).join('');
+        const countTxt = sec.turnos.length === 0 ? '' : '<span class="lista-day-count">' + sec.turnos.length + ' turno' + (sec.turnos.length === 1 ? '' : 's') + '</span>';
+        return '<div class="lista-day-section">' +
+          '<div class="lista-day-header"><span>' + escapeHtml(sec.diaSemana) + ' · ' + escapeHtml(sec.fechaLarga) + '</span>' + countTxt + '</div>' +
+          inner +
+        '</div>';
+      }).join('');
+
+      cont.querySelectorAll('.lista-turno-card').forEach(function (el) {
+        el.addEventListener('click', function () {
+          const id = el.dataset.turnoId;
+          const t = state.turnos.find(function (x) { return String(x.ID_Turno) === String(id); });
+          if (t) abrirModalTurno(t);
+        });
+      });
+    }
+
+    function abrirModalTurnoConFecha(fechaStr) {
+      abrirModalTurno(null);
+      const inputFecha = document.getElementById('turnoFecha');
+      if (inputFecha && fechaStr) inputFecha.value = fechaStr;
+    }
+
+    function abrirModalTurno(turno) {
+      const modal = document.getElementById('turnoModal');
+      if (!modal) return;
+      state.editingTurnoId = turno ? String(turno.ID_Turno) : null;
+      state.turnoVehiculoId = null;
+      state.turnoVehiculoInfo = null;
+
+      const titulo = document.getElementById('turnoModalTitle');
+      const infoBox = document.getElementById('turnoEditInfo');
+      const idInput = document.getElementById('turnoId');
+      const btnCompletar = document.getElementById('btnCompletarTurno');
+      const btnCancelar = document.getElementById('btnCancelarTurno');
+
+      if (turno) {
+        if (titulo) titulo.textContent = 'Editar turno · ' + (turno.ID_Turno || '');
+        if (infoBox) {
+          const fechaStr = formatFechaLocal(turno.Fecha_Hora);
+          const horaStr = formatHoraLocal(turno.Fecha_Hora);
+          infoBox.innerHTML = '<strong>Creado:</strong> ' + escapeHtml(turno.Fecha_Creacion || '—') +
+            ' · <strong>Programado:</strong> ' + escapeHtml(fechaStr + ' ' + horaStr);
+          infoBox.style.display = '';
+        }
+        if (idInput) idInput.value = String(turno.ID_Turno || '');
+        const estadoActual = String(turno.Estado || 'pendiente');
+        const permiteCompletar = estadoActual !== 'completado' && estadoActual !== 'cancelado';
+        if (btnCompletar) btnCompletar.style.display = permiteCompletar ? '' : 'none';
+        if (btnCancelar) btnCancelar.style.display = estadoActual !== 'cancelado' ? '' : 'none';
+
+        state.turnoVehiculoId = turno.ID_Vehiculo || null;
+        state.turnoVehiculoInfo = (turno.Patente || '') + ' · ' + (turno.Marca || '') + ' ' + (turno.Modelo || '');
+        mostrarVehiculoSeleccionadoTurno(turno.Patente, turno.Marca, turno.Modelo, turno.clienteNombre, turno.ID_Vehiculo);
+
+        document.getElementById('turnoFecha').value = formatFechaLocal(turno.Fecha_Hora);
+        document.getElementById('turnoHora').value = formatHoraLocal(turno.Fecha_Hora);
+        document.getElementById('turnoDuracion').value = turno.Duracion_Minutos || 60;
+        document.getElementById('turnoTipo').value = turno.Tipo_Servicio || '';
+        document.getElementById('turnoDescripcion').value = turno.Descripcion || '';
+        document.getElementById('turnoEstado').value = estadoActual;
+        document.getElementById('turnoNotas').value = turno.Notas || '';
+      } else {
+        if (titulo) titulo.textContent = 'Nuevo turno';
+        if (infoBox) infoBox.style.display = 'none';
+        if (idInput) idInput.value = '';
+        if (btnCompletar) btnCompletar.style.display = 'none';
+        if (btnCancelar) btnCancelar.style.display = 'none';
+
+        const now = new Date();
+        const hora = String(now.getHours()).padStart(2, '0');
+        const minRound = Math.ceil(now.getMinutes() / 15) * 15;
+        const minFinal = minRound === 60 ? '00' : String(minRound).padStart(2, '0');
+        const horaFinal = minRound === 60 ? String((parseInt(hora, 10) + 1) % 24).padStart(2, '0') : hora;
+
+        document.getElementById('turnoFecha').value = formatFechaLocal(now);
+        document.getElementById('turnoHora').value = horaFinal + ':' + minFinal;
+        document.getElementById('turnoDuracion').value = '60';
+        document.getElementById('turnoTipo').value = '';
+        document.getElementById('turnoDescripcion').value = '';
+        document.getElementById('turnoEstado').value = 'pendiente';
+        document.getElementById('turnoNotas').value = '';
+
+        document.getElementById('turnoVehiculoSeleccionado').style.display = 'none';
+        document.getElementById('turnoVehiculoBuscar').style.display = '';
+        document.getElementById('turnoVehiculoBuscar').value = '';
+        document.getElementById('turnoVehiculoResultados').style.display = 'none';
+      }
+
+      modal.classList.add('open');
+      setTimeout(function () {
+        const firstField = document.getElementById('turnoVehiculoBuscar');
+        if (firstField && firstField.style.display !== 'none') firstField.focus();
+      }, 100);
+    }
+
+    function cerrarModalTurno() {
+      const modal = document.getElementById('turnoModal');
+      if (modal) modal.classList.remove('open');
+      state.editingTurnoId = null;
+      state.turnoVehiculoId = null;
+      state.turnoVehiculoInfo = null;
+    }
+
+    function mostrarVehiculoSeleccionadoTurno(patente, marca, modelo, clienteNombre, id) {
+      const sel = document.getElementById('turnoVehiculoSeleccionado');
+      const info = document.getElementById('turnoVehiculoInfo');
+      const meta = document.getElementById('turnoVehiculoMeta');
+      if (info) info.textContent = (patente || '—') + ' · ' + (marca || '') + ' ' + (modelo || '');
+      if (meta) meta.textContent = (clienteNombre || 'Sin cliente') + ' · ' + (id || '');
+      if (sel) sel.style.display = 'flex';
+      const buscar = document.getElementById('turnoVehiculoBuscar');
+      if (buscar) {
+        buscar.style.display = 'none';
+        buscar.value = '';
+      }
+      const res = document.getElementById('turnoVehiculoResultados');
+      if (res) res.style.display = 'none';
+    }
+
+    async function buscarVehiculosParaTurno(q) {
+      const cont = document.getElementById('turnoVehiculoResultados');
+      if (!cont) return;
+      if (!q) {
+        cont.innerHTML = '';
+        cont.style.display = 'none';
+        return;
+      }
+      const r = await api('buscarVehiculos', { q: q });
+      if (!apiOk(r)) {
+        cont.innerHTML = '<div class="search-empty"><div class="search-empty-icon">X</div><div>Error: ' + escapeHtml(apiError(r)) + '</div></div>';
+        cont.style.display = 'block';
+        return;
+      }
+      const vehiculos = (r && r.vehiculos) || [];
+      if (vehiculos.length === 0) {
+        cont.innerHTML = '<div class="search-empty"><div class="search-empty-icon">∅</div><div>Sin vehículos</div></div>';
+        cont.style.display = 'block';
+        return;
+      }
+      cont.innerHTML = vehiculos.slice(0, 12).map(function (v) {
+        const info = (v.Patente || '—') + ' · ' + (v.Marca || '') + ' ' + (v.Modelo || '');
+        return '<div class="search-item" data-id="' + escapeHtml(v.ID_Vehiculo) + '" data-patente="' + escapeHtml(v.Patente || '') + '" data-marca="' + escapeHtml(v.Marca || '') + '" data-modelo="' + escapeHtml(v.Modelo || '') + '" data-cliente="' + escapeHtml(v.clienteNombre || '') + '">' +
+          '<div><strong>' + escapeHtml(v.Patente || 'Sin patente') + '</strong> · ' + escapeHtml(v.Marca || '') + ' ' + escapeHtml(v.Modelo || '') + '</div>' +
+          '<div class="meta">' + escapeHtml(v.clienteNombre || 'Sin cliente') + ' · ' + escapeHtml(v.ID_Vehiculo) + '</div>' +
+        '</div>';
+      }).join('');
+      cont.style.display = 'block';
+      cont.querySelectorAll('.search-item').forEach(function (item) {
+        item.addEventListener('click', function () {
+          state.turnoVehiculoId = item.dataset.id;
+          state.turnoVehiculoInfo = item.dataset.patente + ' · ' + item.dataset.marca + ' ' + item.dataset.modelo;
+          mostrarVehiculoSeleccionadoTurno(item.dataset.patente, item.dataset.marca, item.dataset.modelo, item.dataset.cliente, item.dataset.id);
+        });
+      });
+    }
+
+    async function guardarTurnoSubmit(e) {
+      e.preventDefault();
+      if (!state.turnoVehiculoId) {
+        mostrarToast('Seleccioná un vehículo', 'warning');
+        return;
+      }
+      const fecha = document.getElementById('turnoFecha').value;
+      const hora = document.getElementById('turnoHora').value;
+      if (!fecha || !hora) {
+        mostrarToast('Ingresá fecha y hora', 'warning');
+        return;
+      }
+      const tipo = document.getElementById('turnoTipo').value;
+      if (!tipo) {
+        mostrarToast('Seleccioná el tipo de servicio', 'warning');
+        return;
+      }
+      const fechaHora = fecha + 'T' + hora + ':00';
+      const payload = {
+        fechaHora: fechaHora,
+        duracionMinutos: parseInt(document.getElementById('turnoDuracion').value, 10) || 60,
+        idVehiculo: state.turnoVehiculoId,
+        tipoServicio: tipo,
+        descripcion: document.getElementById('turnoDescripcion').value.trim(),
+        estado: document.getElementById('turnoEstado').value,
+        notas: document.getElementById('turnoNotas').value.trim()
+      };
+
+      const btn = document.getElementById('btnGuardarTurno');
+      let r;
+      if (state.editingTurnoId) {
+        payload.id = state.editingTurnoId;
+        r = await withButtonLoading(btn, function () { return api('actualizarTurno', payload); });
+      } else {
+        r = await withButtonLoading(btn, function () { return api('altaTurno', payload); });
+      }
+      if (apiOk(r)) {
+        mostrarToast(state.editingTurnoId ? 'Turno actualizado' : 'Turno creado', 'success');
+        cerrarModalTurno();
+        await loadAgenda();
+      } else {
+        mostrarToast(apiError(r, 'Error guardando turno'), 'error');
+      }
+    }
+
+    async function completarTurnoActual() {
+      if (!state.editingTurnoId) return;
+      if (!confirm('¿Marcar este turno como completado?\n\nSe creará automáticamente un servicio en la hoja Servicios con los datos del turno.')) return;
+      const r = await api('completarTurno', { id: state.editingTurnoId });
+      if (apiOk(r)) {
+        mostrarToast('Turno completado · Servicio ' + (r.servicioId || '') + ' creado', 'success');
+        cerrarModalTurno();
+        await loadAgenda();
+      } else {
+        mostrarToast(apiError(r, 'Error completando turno'), 'error');
+      }
+    }
+
+    async function cancelarTurnoActual() {
+      if (!state.editingTurnoId) return;
+      if (!confirm('¿Cancelar este turno?')) return;
+      const r = await api('cancelarTurno', { id: state.editingTurnoId });
+      if (apiOk(r)) {
+        mostrarToast('Turno cancelado', 'success');
+        cerrarModalTurno();
+        await loadAgenda();
+      } else {
+        mostrarToast(apiError(r, 'Error cancelando turno'), 'error');
+      }
+    }
+
+    function fechaKeyLocal(fechaHora) {
+      if (!fechaHora) return '';
+      const d = fechaHora instanceof Date ? fechaHora : new Date(fechaHora);
+      if (isNaN(d.getTime())) return '';
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function formatHoraLocal(fechaHora) {
+      if (!fechaHora) return '';
+      const d = fechaHora instanceof Date ? fechaHora : new Date(fechaHora);
+      if (isNaN(d.getTime())) return '';
+      return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    }
+
+    function formatFechaLocal(fechaHora) {
+      if (!fechaHora) return '';
+      const d = fechaHora instanceof Date ? fechaHora : new Date(fechaHora);
+      if (isNaN(d.getTime())) return '';
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    initAgendaHelpers();
+
+    const presState = {
+      editingId: null,
+      vehiculoId: null,
+      vehiculoInfo: '',
+      items: [],
+      presupuestos: []
+    };
+
+    function estadoPresupuestoColor(estado) {
+      const e = (estado || '').toString().toLowerCase();
+      return e;
+    }
+
+    function formatoMoneda(n) {
+      const num = parseFloat(n);
+      if (isNaN(num)) return '0';
+      return num.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    }
+
+    function formatoFechaCorta(s) {
+      if (!s) return '';
+      const d = s instanceof Date ? s : new Date(s);
+      if (isNaN(d.getTime())) return String(s).slice(0, 10);
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const yy = d.getFullYear();
+      return dd + '/' + mm + '/' + yy;
+    }
+
+    async function loadPresupuestos() {
+      const cont = document.getElementById('presupuestosContainer');
+      const resumen = document.getElementById('presupuestosResumen');
+      if (!cont || !resumen) return;
+
+      cont.innerHTML = '<div class="pres-empty"><p>Cargando presupuestos...</p></div>';
+      resumen.innerHTML = '';
+
+      const estadoFiltro = document.getElementById('presFiltroEstado').value || '';
+      const q = document.getElementById('presBuscar').value.trim();
+      const r = await api('listarPresupuestos', { estado: estadoFiltro, q: q });
+
+      if (!apiOk(r)) {
+        cont.innerHTML = '<div class="pres-empty"><p>No se pudieron cargar los presupuestos: ' + escapeHtml(apiError(r)) + '</p></div>';
+        return;
+      }
+
+      const presupuestos = r.presupuestos || [];
+      presState.presupuestos = presupuestos;
+
+      const counts = { borrador: 0, enviado: 0, aprobado: 0, rechazado: 0, vencido: 0, completado: 0 };
+      let totalMonto = 0;
+      presupuestos.forEach(function (p) {
+        const est = estadoPresupuestoColor(p._EstadoCalculado || p.Estado);
+        if (counts.hasOwnProperty(est)) counts[est]++;
+        if (est !== 'rechazado' && est !== 'vencido') totalMonto += parseFloat(p.Total) || 0;
+      });
+
+      resumen.innerHTML =
+        '<div class="pres-stat"><div class="pres-stat-label">Total</div><div class="pres-stat-value">' + presupuestos.length + '</div></div>' +
+        '<div class="pres-stat"><div class="pres-stat-label">Borrador</div><div class="pres-stat-value">' + counts.borrador + '</div></div>' +
+        '<div class="pres-stat"><div class="pres-stat-label">Enviados</div><div class="pres-stat-value">' + counts.enviado + '</div></div>' +
+        '<div class="pres-stat"><div class="pres-stat-label">Aprobados</div><div class="pres-stat-value">' + counts.aprobado + '</div></div>' +
+        '<div class="pres-stat"><div class="pres-stat-label">Monto activo</div><div class="pres-stat-value" style="font-size:18px;">$' + formatoMoneda(totalMonto) + '</div></div>';
+
+      if (presupuestos.length === 0) {
+        cont.innerHTML = '<div class="pres-empty"><p>No hay presupuestos ' + (estadoFiltro ? 'en estado "' + estadoFiltro + '"' : '') + (q ? ' que coincidan con "' + escapeHtml(q) + '"' : '') + '.</p><button class="btn btn-sm" onclick="abrirModalNuevoPresupuesto()">+ Crear el primero</button></div>';
+        return;
+      }
+
+      cont.innerHTML = presupuestos.map(function (p) {
+        const estado = estadoPresupuestoColor(p._EstadoCalculado || p.Estado);
+        const vehiculoTxt = (p.Patente || '—') + ' · ' + (p.Marca || '') + ' ' + (p.Modelo || '');
+        const clienteTxt = p.clienteNombre || 'Sin cliente';
+        const fechaTxt = formatoFechaCorta(p.Fecha);
+        const venceTxt = formatoFechaCorta(p.Fecha_Vencimiento);
+        const itemsTxt = (p.itemsCount || 0) + (p.itemsCount === 1 ? ' item' : ' items');
+        const idServicioTxt = p.ID_Servicio ? (' · Servicio ' + escapeHtml(p.ID_Servicio)) : '';
+        const acciones = [];
+        acciones.push('<button class="btn btn-secondary btn-sm" type="button" data-accion="detalle" data-id="' + escapeHtml(p.ID_Presupuesto) + '">Detalle</button>');
+        if (estado === 'borrador') {
+          acciones.push('<button class="btn btn-sm" type="button" data-accion="enviar" data-id="' + escapeHtml(p.ID_Presupuesto) + '">Enviar</button>');
+        }
+        if (estado === 'enviado' || estado === 'vencido') {
+          acciones.push('<button class="btn btn-sm" type="button" data-accion="url" data-id="' + escapeHtml(p.ID_Presupuesto) + '">Ver URL</button>');
+        }
+        if (estado === 'aprobado') {
+          acciones.push('<button class="btn btn-secondary btn-sm" type="button" data-accion="completar" data-id="' + escapeHtml(p.ID_Presupuesto) + '">Completado</button>');
+        }
+
+        return '<div class="pres-card">' +
+          '<div class="pres-card-head">' +
+            '<div>' +
+              '<div class="pres-card-title">' + escapeHtml(p.ID_Presupuesto) + ' · ' + escapeHtml(vehiculoTxt) + '</div>' +
+              '<div class="pres-card-meta">' + escapeHtml(clienteTxt) + ' · ' + fechaTxt + (venceTxt ? ' · vence ' + venceTxt : '') + ' · ' + itemsTxt + idServicioTxt + '</div>' +
+            '</div>' +
+            '<span class="pres-badge ' + estado + '">' + estado + '</span>' +
+          '</div>' +
+          '<div class="pres-card-body">' +
+            '<div><strong>Subtotal:</strong> $' + formatoMoneda(p.Subtotal) + '</div>' +
+            (p.Notas ? '<div style="grid-column:1/-1;"><strong>Notas:</strong> ' + escapeHtml(p.Notas) + '</div>' : '') +
+          '</div>' +
+          '<div class="pres-card-head">' +
+            '<div class="pres-card-total">$' + formatoMoneda(p.Total) + '</div>' +
+            '<div class="pres-card-actions">' + acciones.join('') + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+
+      cont.querySelectorAll('[data-accion]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const accion = btn.dataset.accion;
+          const id = btn.dataset.id;
+          if (accion === 'detalle') abrirDetallePresupuesto(id);
+          else if (accion === 'enviar') enviarPresupuesto(id);
+          else if (accion === 'url') copiarUrlPresupuesto(id);
+          else if (accion === 'completar') completarPresupuesto(id);
+        });
+      });
+    }
+
+    function abrirModalNuevoPresupuesto() {
+      presState.editingId = null;
+      presState.vehiculoId = null;
+      presState.vehiculoInfo = '';
+      presState.items = [];
+
+      document.getElementById('presupuestoModalTitle').textContent = 'Nuevo Presupuesto';
+      document.getElementById('presId').value = '';
+      document.getElementById('presVehiculoBuscar').value = '';
+      document.getElementById('presVehiculoBuscar').disabled = false;
+      document.getElementById('presVehiculoSeleccionado').style.display = 'none';
+      document.getElementById('presVehiculoResultados').style.display = 'none';
+      document.getElementById('presValidez').value = 15;
+      document.getElementById('presNotas').value = '';
+      document.getElementById('presItemsContainer').innerHTML = '';
+      agregarItemPresupuesto({ tipo: 'repuesto', descripcion: '', cantidad: 1, precioUnitario: 0 });
+      recalcularTotalesPresupuesto();
+
+      document.getElementById('presupuestoModal').classList.add('open');
+      setTimeout(function () { document.getElementById('presVehiculoBuscar').focus(); }, 100);
+    }
+
+    function cerrarModalPresupuesto() {
+      document.getElementById('presupuestoModal').classList.remove('open');
+    }
+
+    let presVehiculoTimer;
+    document.getElementById('presVehiculoBuscar').addEventListener('input', function (e) {
+      clearTimeout(presVehiculoTimer);
+      const q = e.target.value.trim();
+      presVehiculoTimer = setTimeout(function () { buscarVehiculosParaPresupuesto(q); }, 300);
+    });
+
+    async function buscarVehiculosParaPresupuesto(q) {
+      const cont = document.getElementById('presVehiculoResultados');
+      const r = await api('buscarVehiculos', { q: q });
+      if (!apiOk(r)) {
+        cont.innerHTML = '<div class="search-empty"><div class="search-empty-icon">X</div><div>Error: ' + escapeHtml(apiError(r)) + '</div></div>';
+        cont.style.display = 'block';
+        return;
+      }
+      const vehiculos = r.vehiculos || [];
+      if (vehiculos.length === 0) {
+        cont.innerHTML = '<div class="search-empty"><div class="search-empty-icon">∅</div><div>Sin vehículos</div></div>';
+        cont.style.display = 'block';
+        return;
+      }
+      cont.innerHTML = vehiculos.slice(0, 10).map(function (v) {
+        const info = (v.Patente || '') + ' · ' + (v.Marca || '') + ' ' + (v.Modelo || '') + (v.clienteNombre ? ' · ' + v.clienteNombre : '');
+        return '<div class="search-item" data-id="' + escapeHtml(v.ID_Vehiculo) + '" data-info="' + escapeHtml(info) + '">' +
+          '<div><strong>' + escapeHtml(v.Patente || 'Sin patente') + '</strong> · ' + escapeHtml(v.Marca || '') + ' ' + escapeHtml(v.Modelo || '') + '</div>' +
+          '<div class="meta">' + escapeHtml(v.clienteNombre || 'Sin cliente') + '</div>' +
+          '</div>';
+      }).join('');
+      cont.style.display = 'block';
+      cont.querySelectorAll('.search-item').forEach(function (item) {
+        item.addEventListener('click', function () {
+          seleccionarVehiculoParaPresupuesto(item.dataset.id, item.dataset.info);
+        });
+      });
+    }
+
+    function seleccionarVehiculoParaPresupuesto(id, info) {
+      presState.vehiculoId = id;
+      presState.vehiculoInfo = info;
+      document.getElementById('presVehiculoBuscar').value = '';
+      document.getElementById('presVehiculoBuscar').disabled = true;
+      document.getElementById('presVehiculoResultados').style.display = 'none';
+      document.getElementById('presVehiculoInfo').textContent = info;
+      document.getElementById('presVehiculoMeta').textContent = 'ID ' + id;
+      document.getElementById('presVehiculoSeleccionado').style.display = 'flex';
+    }
+
+    document.getElementById('btnCambiarPresVehiculo').addEventListener('click', function () {
+      presState.vehiculoId = null;
+      presState.vehiculoInfo = '';
+      document.getElementById('presVehiculoBuscar').disabled = false;
+      document.getElementById('presVehiculoBuscar').value = '';
+      document.getElementById('presVehiculoSeleccionado').style.display = 'none';
+      document.getElementById('presVehiculoBuscar').focus();
+    });
+
+    function agregarItemPresupuesto(item) {
+      const container = document.getElementById('presItemsContainer');
+      const row = document.createElement('div');
+      row.className = 'pres-item-row';
+      const tipoVal = item && item.tipo ? item.tipo : 'repuesto';
+      const descVal = item && item.descripcion ? item.descripcion : '';
+      const cantVal = item && item.cantidad ? item.cantidad : 1;
+      const precioVal = item && item.precioUnitario != null ? item.precioUnitario : 0;
+      row.innerHTML =
+        '<select class="pres-item-tipo">' +
+          '<option value="repuesto"' + (tipoVal === 'repuesto' ? ' selected' : '') + '>Repuesto</option>' +
+          '<option value="mano_obra"' + (tipoVal === 'mano_obra' ? ' selected' : '') + '>Mano de obra</option>' +
+        '</select>' +
+        '<input type="text" class="pres-item-desc" placeholder="Descripción" value="' + escapeHtml(String(descVal)) + '">' +
+        '<input type="number" class="pres-item-cant" placeholder="Cant" min="0.1" step="0.1" value="' + cantVal + '">' +
+        '<input type="number" class="pres-item-precio" placeholder="Precio" min="0" step="0.01" value="' + precioVal + '">' +
+        '<span class="pres-item-subtotal">$0</span>' +
+        '<button type="button" class="btn-remove-item" aria-label="Quitar">&times;</button>';
+      container.appendChild(row);
+
+      const actualizarSubtotalFila = function () {
+        const cant = parseFloat(row.querySelector('.pres-item-cant').value) || 0;
+        const precio = parseFloat(row.querySelector('.pres-item-precio').value) || 0;
+        row.querySelector('.pres-item-subtotal').textContent = '$' + formatoMoneda(cant * precio);
+        recalcularTotalesPresupuesto();
+      };
+
+      row.querySelectorAll('input, select').forEach(function (el) {
+        el.addEventListener('input', actualizarSubtotalFila);
+        el.addEventListener('change', actualizarSubtotalFila);
+      });
+      row.querySelector('.btn-remove-item').addEventListener('click', function () {
+        row.remove();
+        recalcularTotalesPresupuesto();
+      });
+
+      actualizarSubtotalFila();
+    }
+
+    document.getElementById('btnAddItem').addEventListener('click', function () {
+      agregarItemPresupuesto({ tipo: 'repuesto', descripcion: '', cantidad: 1, precioUnitario: 0 });
+    });
+
+    function recalcularTotalesPresupuesto() {
+      let subtotal = 0;
+      document.querySelectorAll('#presItemsContainer .pres-item-row').forEach(function (row) {
+        const cant = parseFloat(row.querySelector('.pres-item-cant').value) || 0;
+        const precio = parseFloat(row.querySelector('.pres-item-precio').value) || 0;
+        subtotal += cant * precio;
+      });
+      document.getElementById('presTotal').textContent = formatoMoneda(subtotal);
+    }
+
+    function leerItemsPresupuestoDelForm() {
+      const items = [];
+      document.querySelectorAll('#presItemsContainer .pres-item-row').forEach(function (row) {
+        const tipo = row.querySelector('.pres-item-tipo').value;
+        const descripcion = row.querySelector('.pres-item-desc').value.trim();
+        const cantidad = parseFloat(row.querySelector('.pres-item-cant').value) || 0;
+        const precioUnitario = parseFloat(row.querySelector('.pres-item-precio').value) || 0;
+        items.push({ tipo: tipo, descripcion: descripcion, cantidad: cantidad, precioUnitario: precioUnitario });
+      });
+      return items;
+    }
+
+    document.getElementById('presupuestoForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      if (!presState.vehiculoId) {
+        mostrarToast('Seleccioná un vehículo', 'warning');
+        return;
+      }
+      const items = leerItemsPresupuestoDelForm();
+      if (items.length === 0) {
+        mostrarToast('Agregá al menos un item', 'warning');
+        return;
+      }
+      const itemsValidos = items.filter(function (it) { return it.descripcion && it.cantidad > 0; });
+      if (itemsValidos.length === 0) {
+        mostrarToast('Todos los items están vacíos o sin cantidad', 'warning');
+        return;
+      }
+      const payload = {
+        idVehiculo: presState.vehiculoId,
+        items: itemsValidos,
+        validezDias: parseInt(document.getElementById('presValidez').value, 10) || 15,
+        notas: document.getElementById('presNotas').value.trim()
+      };
+      const btn = document.getElementById('btnGuardarPresupuesto');
+      const r = await withButtonLoading(btn, function () { return api('altaPresupuesto', payload); });
+      if (apiOk(r)) {
+        mostrarToast('Presupuesto ' + r.id + ' creado', 'success');
+        cerrarModalPresupuesto();
+        await loadPresupuestos();
+      } else {
+        mostrarToast(apiError(r, 'Error creando presupuesto'), 'error');
+      }
+    });
+
+    document.getElementById('btnNuevoPresupuesto').addEventListener('click', abrirModalNuevoPresupuesto);
+    document.getElementById('presupuestoModalClose').addEventListener('click', cerrarModalPresupuesto);
+    document.getElementById('btnCancelarPresupuesto').addEventListener('click', cerrarModalPresupuesto);
+    document.getElementById('presupuestoModal').addEventListener('click', function (e) {
+      if (e.target === this) cerrarModalPresupuesto();
+    });
+
+    document.getElementById('presFiltroEstado').addEventListener('change', loadPresupuestos);
+    let presBuscarTimer;
+    document.getElementById('presBuscar').addEventListener('input', function () {
+      clearTimeout(presBuscarTimer);
+      presBuscarTimer = setTimeout(loadPresupuestos, 300);
+    });
+
+    function escapePresHtml(s) { return escapeHtml(s); }
+
+    async function enviarPresupuesto(id) {
+      const r = await api('marcarPresupuestoEnviado', { id: id });
+      if (apiOk(r)) {
+        mostrarToast('Presupuesto enviado', 'success');
+        await loadPresupuestos();
+        abrirDetallePresupuesto(id);
+      } else {
+        mostrarToast(apiError(r, 'Error enviando presupuesto'), 'error');
+      }
+    }
+
+    async function copiarUrlPresupuesto(id) {
+      const det = await api('obtenerPresupuesto', { id: id });
+      if (!apiOk(det) || !det.presupuesto || !det.presupuesto.urlPublica) {
+        mostrarToast('No se pudo obtener la URL', 'error');
+        return;
+      }
+      const url = det.presupuesto.urlPublica;
+      try {
+        await navigator.clipboard.writeText(url);
+        mostrarToast('URL copiada al portapapeles', 'success');
+      } catch (err) {
+        mostrarToast('No se pudo copiar. URL: ' + url, 'warning');
+      }
+    }
+
+    async function completarPresupuesto(id) {
+      if (!confirm('¿Marcar este presupuesto como completado?\n\nEl servicio asociado ya fue creado al aprobar el presupuesto.')) return;
+      const r = await api('actualizarPresupuesto', { id: id, estado: 'completado' });
+      if (apiOk(r)) {
+        mostrarToast('Presupuesto completado', 'success');
+        await loadPresupuestos();
+      } else {
+        mostrarToast(apiError(r, 'Error completando presupuesto'), 'error');
+      }
+    }
+
+    async function abrirDetallePresupuesto(id) {
+      const r = await api('obtenerPresupuesto', { id: id });
+      if (!apiOk(r)) {
+        mostrarToast(apiError(r, 'No se pudo cargar el detalle'), 'error');
+        return;
+      }
+      const p = r.presupuesto;
+      const items = r.items || [];
+      const v = r.vehiculo || {};
+      const cli = r.cliente || {};
+      const estado = estadoPresupuestoColor(p._EstadoCalculado || p.Estado);
+
+      const tel = cli.Telefono || '';
+      const telWa = String(tel).replace(/\D/g, '');
+      const waLink = telWa ? ('https://wa.me/' + telWa) : '';
+      const vehiculoTxt = (v.Patente || '—') + ' · ' + (v.Marca || '') + ' ' + (v.Modelo || '') + (v.Anio ? ' (' + v.Anio + ')' : '');
+
+      const mensajeWa =
+        'Hola ' + (cli.Nombre || '') + '! Te paso el presupuesto #' + p.ID_Presupuesto + ' para tu ' + (v.Marca || '') + ' ' + (v.Modelo || '') + '.\n\n' +
+        'Total: $' + formatoMoneda(p.Total) + '\n' +
+        'Validez: ' + (p.Validez_Dias || 15) + ' días (hasta ' + formatoFechaCorta(p.Fecha_Vencimiento) + ')\n\n' +
+        'Podés ver el detalle completo y aprobarlo desde acá:\n' + (p.urlPublica || '') + '\n\n' +
+        'Cualquier duda me decís. Gracias!';
+
+      const itemsHtml = items.map(function (it) {
+        return '<tr>' +
+          '<td>' + escapeHtml(it.Descripcion || '') + '</td>' +
+          '<td class="num">' + (it.Cantidad || 0) + '</td>' +
+          '<td class="num">$' + formatoMoneda(it.Precio_Unitario) + '</td>' +
+          '<td class="num">$' + formatoMoneda(it.Subtotal_Item) + '</td>' +
+          '<td class="tipo">' + escapeHtml(it.Tipo || '') + '</td>' +
+        '</tr>';
+      }).join('');
+
+      const acciones = [];
+      if (estado === 'borrador') {
+        acciones.push('<button type="button" class="btn" data-accion-modal="enviar" data-id="' + escapeHtml(p.ID_Presupuesto) + '">Marcar como enviado</button>');
+      }
+      if (estado === 'enviado' || estado === 'vencido') {
+        acciones.push('<button type="button" class="btn btn-secondary" data-accion-modal="copiar" data-url="' + escapeHtml(p.urlPublica || '') + '">Copiar URL pública</button>');
+        if (p.urlPublica) {
+          acciones.push('<a class="btn btn-secondary" href="' + escapeHtml(p.urlPublica) + '" target="_blank" rel="noopener noreferrer">Ver como cliente</a>');
+        }
+      }
+      if (estado === 'aprobado') {
+        acciones.push('<button type="button" class="btn" data-accion-modal="completar" data-id="' + escapeHtml(p.ID_Presupuesto) + '">Marcar completado</button>');
+      }
+      if (waLink) {
+        acciones.push('<a class="btn btn-success" href="' + escapeHtml(waLink + '?text=' + encodeURIComponent(mensajeWa)) + '" target="_blank" rel="noopener noreferrer">Enviar por WhatsApp</a>');
+      }
+      acciones.push('<button type="button" class="btn btn-secondary" data-accion-modal="cerrar">Cerrar</button>');
+
+      const urlBox = p.urlPublica ? '<div class="pres-url-box">' + escapeHtml(p.urlPublica) + '</div>' : '';
+      const fechaAprob = p.Fecha_Aprobacion ? formatoFechaCorta(p.Fecha_Aprobacion) : '—';
+
+      const html =
+        '<div class="pres-card-head">' +
+          '<div>' +
+            '<div class="pres-card-title">' + escapeHtml(p.ID_Presupuesto) + ' · ' + escapeHtml(vehiculoTxt) + '</div>' +
+            '<div class="pres-card-meta">' + escapeHtml(cli.Nombre || 'Sin cliente') + (tel ? ' · ' + escapeHtml(tel) : '') + '</div>' +
+          '</div>' +
+          '<span class="pres-badge ' + estado + '">' + estado + '</span>' +
+        '</div>' +
+        '<div class="pres-detalles-card">' +
+          '<div class="pres-detalles-row"><span>Fecha</span><span>' + formatoFechaCorta(p.Fecha) + '</span></div>' +
+          '<div class="pres-detalles-row"><span>Vencimiento</span><span>' + formatoFechaCorta(p.Fecha_Vencimiento) + '</span></div>' +
+          '<div class="pres-detalles-row"><span>Validez</span><span>' + (p.Validez_Dias || 0) + ' días</span></div>' +
+          (p.ID_Servicio ? '<div class="pres-detalles-row"><span>Servicio generado</span><span>' + escapeHtml(p.ID_Servicio) + '</span></div>' : '') +
+          (estado === 'aprobado' ? '<div class="pres-detalles-row"><span>Aprobado</span><span>' + fechaAprob + '</span></div>' : '') +
+          (p.Notas ? '<div class="pres-detalles-row"><span>Notas</span><span>' + escapeHtml(p.Notas) + '</span></div>' : '') +
+        '</div>' +
+        '<div class="card-title" style="font-size:11px;">Items</div>' +
+        '<table class="pres-items-tabla">' +
+          '<thead><tr><th>Descripción</th><th class="num">Cant</th><th class="num">P. Unit.</th><th class="num">Subtotal</th><th>Tipo</th></tr></thead>' +
+          '<tbody>' + itemsHtml + '</tbody>' +
+        '</table>' +
+        '<div class="pres-totals">' +
+          '<div class="pres-totals-row total"><span>Total</span><span>$' + formatoMoneda(p.Total) + '</span></div>' +
+        '</div>' +
+        (waLink ? '<div class="card-title" style="font-size:11px; margin-top:14px;">Mensaje para WhatsApp</div><div class="pres-wa-text">' + escapeHtml(mensajeWa) + '</div>' : '') +
+        (p.urlPublica ? '<div class="card-title" style="font-size:11px; margin-top:14px;">URL pública</div>' + urlBox : '') +
+        '<div class="modal-actions">' + acciones.join('') + '</div>';
+
+      document.getElementById('presDetalleBody').innerHTML = html;
+      document.getElementById('presupuestoDetalleTitle').textContent = 'Presupuesto ' + p.ID_Presupuesto;
+      const modal = document.getElementById('presupuestoDetalleModal');
+      modal.classList.add('open');
+
+      modal.querySelectorAll('[data-accion-modal]').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+          const accion = btn.dataset.accionModal;
+          if (accion === 'cerrar') modal.classList.remove('open');
+          else if (accion === 'enviar') {
+            const r2 = await api('marcarPresupuestoEnviado', { id: btn.dataset.id });
+            if (apiOk(r2)) {
+              mostrarToast('Presupuesto enviado', 'success');
+              modal.classList.remove('open');
+              await loadPresupuestos();
+            } else {
+              mostrarToast(apiError(r2, 'Error enviando'), 'error');
+            }
+          } else if (accion === 'completar') {
+            if (!confirm('¿Marcar este presupuesto como completado?')) return;
+            const r2 = await api('actualizarPresupuesto', { id: btn.dataset.id, estado: 'completado' });
+            if (apiOk(r2)) {
+              mostrarToast('Presupuesto completado', 'success');
+              modal.classList.remove('open');
+              await loadPresupuestos();
+            } else {
+              mostrarToast(apiError(r2, 'Error completando'), 'error');
+            }
+          } else if (accion === 'copiar') {
+            try {
+              await navigator.clipboard.writeText(btn.dataset.url);
+              mostrarToast('URL copiada al portapapeles', 'success');
+            } catch (err) {
+              mostrarToast('No se pudo copiar', 'warning');
+            }
+          }
+        });
+      });
+    }
+
+    function cerrarModalDetallePresupuesto() {
+      document.getElementById('presupuestoDetalleModal').classList.remove('open');
+    }
+    document.getElementById('presupuestoDetalleClose').addEventListener('click', cerrarModalDetallePresupuesto);
+    document.getElementById('presupuestoDetalleModal').addEventListener('click', function (e) {
+      if (e.target === this) cerrarModalDetallePresupuesto();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        const m1 = document.getElementById('presupuestoModal');
+        const m2 = document.getElementById('presupuestoDetalleModal');
+        if (m1 && m1.classList.contains('open')) cerrarModalPresupuesto();
+        else if (m2 && m2.classList.contains('open')) cerrarModalDetallePresupuesto();
+      }
+    });
 
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', loadDashboard);

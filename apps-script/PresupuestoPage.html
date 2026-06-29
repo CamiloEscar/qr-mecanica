@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Presupuesto #<?= presupuesto.ID_Presupuesto ?></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&display=swap">
+  <style>
+    :root {
+      --negro: #0a0a0a;
+      --negro-soft: #141414;
+      --negro-card: #1a1a1a;
+      --negro-border: #2a2a2a;
+      --rojo: #dc2626;
+      --rojo-hover: #ef4444;
+      --rojo-glow: rgba(220, 38, 38, 0.4);
+      --texto: #f5f5f5;
+      --texto-muted: #a3a3a3;
+      --texto-dim: #525252;
+      --success: #10b981;
+      --success-dark: #6ee7b7;
+      --success-light: rgba(16, 185, 129, 0.15);
+      --warning: #f59e0b;
+      --warning-dark: #fbbf24;
+      --warning-light: rgba(245, 158, 11, 0.15);
+      --info: #3b82f6;
+      --info-dark: #93c5fd;
+      --info-light: rgba(59, 130, 246, 0.15);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--negro);
+      color: var(--texto);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      position: relative;
+      min-height: 100vh;
+      padding-bottom: 32px;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 1;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent 0%, var(--rojo) 50%, transparent 100%);
+      z-index: 9999;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 16px;
+      position: relative;
+      z-index: 2;
+    }
+    .header {
+      background: linear-gradient(135deg, var(--negro-soft) 0%, var(--negro-card) 100%);
+      color: var(--texto);
+      padding: 22px 20px;
+      border-radius: 14px;
+      margin-bottom: 16px;
+      border: 1px solid var(--negro-border);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent 0%, var(--rojo) 50%, transparent 100%);
+    }
+    .taller-brand {
+      display: flex; align-items: center; gap: 12px;
+      padding-bottom: 14px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--negro-border);
+    }
+    .taller-brand-text { display: flex; flex-direction: column; min-width: 0; }
+    .taller-nombre-inline {
+      font-family: 'Oswald', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--texto);
+      line-height: 1.1;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .logo-taller-img { display: none; max-height: 40px; max-width: 110px; height: auto; }
+    .logo-placeholder {
+      width: 100px; height: 40px;
+      background: var(--negro-soft);
+      border: 2px dashed var(--rojo);
+      border-radius: 8px;
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 4px;
+      color: var(--rojo); font-weight: 700; font-size: 11px;
+      letter-spacing: 1.5px;
+      flex-shrink: 0;
+    }
+    .logo-placeholder svg { opacity: 0.85; }
+    .header h1 {
+      margin: 8px 0 4px;
+      font-family: 'Oswald', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      line-height: 1.1;
+    }
+    .header .meta {
+      font-size: 13px;
+      color: var(--texto-muted);
+      letter-spacing: 0.03em;
+    }
+    .header .meta strong {
+      color: var(--rojo);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 11px;
+      margin-right: 4px;
+    }
+    .badge-estado {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      border: 1px solid;
+      margin-top: 8px;
+    }
+    .badge-estado.borrador { background: var(--warning-light); color: var(--warning-dark); border-color: var(--warning); }
+    .badge-estado.enviado { background: var(--info-light); color: var(--info-dark); border-color: var(--info); }
+    .badge-estado.aprobado { background: var(--success-light); color: var(--success-dark); border-color: var(--success); }
+    .badge-estado.rechazado { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border-color: #ef4444; }
+    .badge-estado.vencido { background: rgba(107, 114, 128, 0.15); color: #d1d5db; border-color: #6b7280; }
+    .badge-estado.completado { background: rgba(5, 150, 105, 0.15); color: #6ee7b7; border-color: #059669; }
+    .alert {
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      border: 1px solid;
+      border-left-width: 4px;
+    }
+    .alert-warning { background: var(--warning-light); border-color: rgba(245, 158, 11, 0.3); border-left-color: var(--warning); color: var(--warning-dark); }
+    .alert-success { background: var(--success-light); border-color: rgba(16, 185, 129, 0.3); border-left-color: var(--success); color: var(--success-dark); }
+    .alert-danger { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.3); border-left-color: #ef4444; color: #fca5a5; }
+    .alert-info { background: var(--info-light); border-color: rgba(59, 130, 246, 0.3); border-left-color: var(--info); color: var(--info-dark); }
+    .alert-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .card {
+      background: var(--negro-card);
+      border: 1px solid var(--negro-border);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--rojo);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 14px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: var(--texto-muted);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+    .stat-value {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--texto);
+    }
+    .items-tabla {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+    .items-tabla th {
+      text-align: left;
+      font-size: 10px;
+      color: var(--texto-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 8px 4px;
+      border-bottom: 1px solid var(--negro-border);
+      font-weight: 700;
+    }
+    .items-tabla th.num { text-align: right; }
+    .items-tabla td {
+      padding: 10px 4px;
+      border-bottom: 1px solid var(--negro-border);
+      font-size: 14px;
+      vertical-align: top;
+    }
+    .items-tabla td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .items-tabla td.tipo {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--texto-muted);
+      letter-spacing: 0.06em;
+    }
+    .items-tabla tr:last-child td { border-bottom: none; }
+    .item-desc {
+      font-weight: 600;
+      color: var(--texto);
+    }
+    .totales {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--negro-border);
+    }
+    .totales-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 14px;
+      color: var(--texto-muted);
+    }
+    .totales-row.total {
+      border-top: 1px solid var(--negro-border);
+      margin-top: 8px;
+      padding-top: 12px;
+      font-family: 'Oswald', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--rojo);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .acciones {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 20px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+      text-decoration: none;
+      width: 100%;
+    }
+    .btn-primary {
+      background: var(--rojo);
+      color: #ffffff;
+      box-shadow: 0 0 0 0 var(--rojo-glow);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--rojo-hover);
+      box-shadow: 0 0 24px 4px var(--rojo-glow);
+      transform: translateY(-1px);
+    }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn-secondary {
+      background: var(--negro-soft);
+      color: var(--texto);
+      border: 1px solid var(--negro-border);
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--negro-card);
+      border-color: var(--rojo);
+    }
+    .btn-success {
+      background: var(--success);
+      color: #ffffff;
+    }
+    .btn-success:hover { background: #059669; }
+    .motivo-box {
+      margin-top: 8px;
+      margin-bottom: 14px;
+      display: none;
+    }
+    .motivo-box.visible { display: block; }
+    .motivo-box textarea {
+      width: 100%;
+      background: var(--negro-soft);
+      color: var(--texto);
+      border: 1px solid var(--negro-border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      min-height: 70px;
+      resize: vertical;
+    }
+    .footer {
+      text-align: center;
+      padding: 24px 18px 22px;
+      color: var(--texto-muted);
+      font-size: 13px;
+      margin-top: 12px;
+      background: var(--negro-card);
+      border: 1px solid var(--negro-border);
+      border-radius: 14px;
+    }
+    .footer-brand {
+      display: flex; align-items: center; gap: 14px;
+      max-width: 480px; margin: 0 auto 18px;
+    }
+    .footer-logo .logo-taller-img { max-height: 56px; max-width: 130px; }
+    .footer-logo .logo-placeholder {
+      width: 130px; height: 56px;
+      background: var(--negro-soft);
+      border: 2px dashed var(--rojo);
+      color: var(--rojo);
+      font-size: 13px;
+      letter-spacing: 2px;
+    }
+    .footer-info { flex: 1; min-width: 0; text-align: left; }
+    .footer-taller-nombre {
+      font-family: 'Oswald', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--texto);
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .footer-taller-sub {
+      font-size: 10px;
+      color: var(--rojo);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .footer-contact {
+      display: flex; flex-direction: column; gap: 10px; align-items: center;
+      max-width: 480px; margin: 0 auto 16px;
+    }
+    .footer-wa-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px;
+      background: var(--rojo);
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 14px 28px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      width: 100%;
+      max-width: 320px;
+      transition: all 0.2s;
+      box-shadow: 0 0 0 0 var(--rojo-glow);
+    }
+    .footer-wa-btn:hover {
+      background: var(--rojo-hover);
+      box-shadow: 0 0 24px 4px var(--rojo-glow);
+      transform: translateY(-1px);
+    }
+    .footer-ig-link {
+      color: var(--texto-muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: color 0.2s;
+    }
+    .footer-ig-link:hover { color: var(--rojo); }
+    .footer-meta {
+      font-size: 11px;
+      color: var(--texto-dim);
+      padding-top: 14px;
+      border-top: 1px solid var(--negro-border);
+      letter-spacing: 0.04em;
+    }
+    .confirmacion {
+      text-align: center;
+      padding: 24px 16px;
+    }
+    .confirmacion-icon {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 14px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      font-weight: 700;
+    }
+    .confirmacion.aprobado .confirmacion-icon {
+      background: var(--success-light);
+      color: var(--success-dark);
+      border: 2px solid var(--success);
+    }
+    .confirmacion.rechazado .confirmacion-icon {
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+      border: 2px solid #ef4444;
+    }
+    .confirmacion h2 {
+      font-family: 'Oswald', sans-serif;
+      font-size: 22px;
+      margin: 0 0 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .confirmacion p {
+      color: var(--texto-muted);
+      font-size: 14px;
+      margin: 0 0 6px;
+    }
+    @media (max-width: 480px) {
+      .grid-2 { grid-template-columns: 1fr; gap: 12px; }
+      .header h1 { font-size: 22px; }
+      .container { padding: 12px; }
+      .taller-brand { flex-wrap: wrap; }
+      .items-tabla td { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="taller-brand">
+        <img id="logoTallerHeader" class="logo-taller-img" alt="Logo del taller">
+        <div id="logoPlaceholderHeader" class="logo-placeholder">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>
+          <span>LOGO</span>
+        </div>
+        <div class="taller-brand-text">
+          <div class="taller-nombre-inline">Mecánica Martínez</div>
+        </div>
+      </div>
+      <h1>Presupuesto #<?= presupuesto.ID_Presupuesto ?></h1>
+      <div class="meta">
+        <strong>Fecha</strong> <?= presupuesto.Fecha ?>
+        <? if (presupuesto.Fecha_Vencimiento) { ?>
+          · <strong>Vence</strong> <?= presupuesto.Fecha_Vencimiento ?>
+        <? } ?>
+      </div>
+      <span class="badge-estado <?= presupuesto.Estado ?>"><?= presupuesto.Estado ?></span>
+    </div>
+
+    <? if (presupuesto.Estado === 'vencido') { ?>
+      <div class="alert alert-warning">
+        <div class="alert-title">Presupuesto vencido</div>
+        <div>Este presupuesto venció el <?= presupuesto.Fecha_Vencimiento ?>. Contactanos por WhatsApp para pedir uno nuevo.</div>
+      </div>
+    <? } ?>
+
+    <? if (presupuesto.Estado === 'aprobado') { ?>
+      <div class="alert alert-success">
+        <div class="alert-title">Aprobado</div>
+        <div>Aprobaste este presupuesto
+          <? if (presupuesto.Fecha_Aprobacion) { ?> el <?= presupuesto.Fecha_Aprobacion ?><? } ?>.
+          <? if (presupuesto.ID_Servicio) { ?> Ya generamos el servicio <strong><?= presupuesto.ID_Servicio ?></strong> en nuestro sistema.<? } ?>
+        </div>
+      </div>
+    <? } ?>
+
+    <? if (presupuesto.Estado === 'rechazado') { ?>
+      <div class="alert alert-danger">
+        <div class="alert-title">Rechazado</div>
+        <div>Este presupuesto fue rechazado. Si querés, contactanos por WhatsApp para revisar opciones.</div>
+      </div>
+    <? } ?>
+
+    <? if (presupuesto.Estado === 'completado') { ?>
+      <div class="alert alert-success">
+        <div class="alert-title">Servicio completado</div>
+        <div>Este presupuesto ya fue ejecutado y el servicio está terminado.</div>
+      </div>
+    <? } ?>
+
+    <div class="card">
+      <div class="card-title">Vehículo</div>
+      <div class="grid-2">
+        <div>
+          <div class="stat-label">Patente</div>
+          <div class="stat-value"><?= vehiculo.Patente || '—' ?></div>
+        </div>
+        <div>
+          <div class="stat-label">Vehículo</div>
+          <div class="stat-value"><?= vehiculo.Marca || '' ?> <?= vehiculo.Modelo || '' ?></div>
+        </div>
+        <? if (vehiculo.Anio) { ?>
+          <div>
+            <div class="stat-label">Año</div>
+            <div class="stat-value"><?= vehiculo.Anio ?></div>
+          </div>
+        <? } ?>
+        <? if (vehiculo.Combustible) { ?>
+          <div>
+            <div class="stat-label">Combustible</div>
+            <div class="stat-value"><?= vehiculo.Combustible ?></div>
+          </div>
+        <? } ?>
+      </div>
+    </div>
+
+    <? if (cliente && cliente.Nombre) { ?>
+      <div class="card">
+        <div class="card-title">Cliente</div>
+        <div class="grid-2">
+          <div>
+            <div class="stat-label">Nombre</div>
+            <div class="stat-value"><?= cliente.Nombre ?></div>
+          </div>
+          <? if (cliente.Telefono) { ?>
+            <div>
+              <div class="stat-label">Teléfono</div>
+              <div class="stat-value"><?= cliente.Telefono ?></div>
+            </div>
+          <? } ?>
+        </div>
+      </div>
+    <? } ?>
+
+    <div class="card">
+      <div class="card-title">Detalle</div>
+      <table class="items-tabla">
+        <thead>
+          <tr>
+            <th>Descripción</th>
+            <th class="num">Cant</th>
+            <th class="num">P. Unit.</th>
+            <th class="num">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <? items.forEach(function(it) { ?>
+            <tr>
+              <td>
+                <div class="item-desc"><?= it.Descripcion || '' ?></div>
+                <? if (it.Tipo === 'mano_obra') { ?>
+                  <div class="tipo">Mano de obra</div>
+                <? } else if (it.Tipo === 'repuesto') { ?>
+                  <div class="tipo">Repuesto</div>
+                <? } ?>
+              </td>
+              <td class="num"><?= it.Cantidad || 0 ?></td>
+              <td class="num">$<?= it.Precio_Unitario ?></td>
+              <td class="num">$<?= it.Subtotal_Item ?></td>
+            </tr>
+          <? }); ?>
+        </tbody>
+      </table>
+      <div class="totales">
+        <div class="totales-row total"><span>Total</span><span>$<?= presupuesto.Total ?></span></div>
+      </div>
+    </div>
+
+    <? if (presupuesto.Notas && presupuesto.Estado !== 'rechazado') { ?>
+      <div class="card">
+        <div class="card-title">Notas</div>
+        <div><?= presupuesto.Notas ?></div>
+      </div>
+    <? } ?>
+
+    <? if (presupuesto.Estado === 'enviado' || presupuesto.Estado === 'borrador') { ?>
+      <div class="alert alert-info">
+        <div class="alert-title">Validez</div>
+        <div>Este presupuesto tiene una validez de <?= presupuesto.Validez_Dias || 15 ?> días
+          <? if (presupuesto.Fecha_Vencimiento) { ?> (hasta el <?= presupuesto.Fecha_Vencimiento ?>).<? } else { ?>.<? } ?>
+        </div>
+      </div>
+
+      <div id="bloqueAcciones">
+        <div class="acciones">
+          <button type="button" class="btn btn-primary" id="btnAprobar">Aprobar presupuesto</button>
+          <button type="button" class="btn btn-secondary" id="btnToggleRechazar">Rechazar</button>
+        </div>
+        <div class="motivo-box" id="motivoBox">
+          <textarea id="motivoRechazo" placeholder="Motivo del rechazo (opcional)"></textarea>
+          <div class="acciones" style="margin-top:10px;">
+            <button type="button" class="btn btn-secondary" id="btnConfirmarRechazo">Confirmar rechazo</button>
+            <button type="button" class="btn btn-secondary" id="btnCancelarRechazo">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    <? } ?>
+
+    <div id="confirmacionBox" style="display:none;"></div>
+
+    <div class="footer">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <img id="logoTallerFooter" class="logo-taller-img" alt="Logo del taller">
+          <div id="logoPlaceholderFooter" class="logo-placeholder">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>
+            <span>LOGO</span>
+          </div>
+        </div>
+        <div class="footer-info">
+          <div class="footer-taller-nombre">Mecánica Martínez</div>
+          <div class="footer-taller-sub">Servicio Automotriz</div>
+        </div>
+      </div>
+      <div class="footer-contact">
+        <a class="footer-wa-btn" href="https://wa.me/5493442625581" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56-.35-.12-.74-.03-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3.24 3 3 3.99 3 13.28 10.73 21 19.99 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.97-.99z"/></svg>
+          Escribinos por WhatsApp
+        </a>
+        <a class="footer-ig-link" href="https://www.instagram.com/martinez_mecanicaautomotriz/" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.81.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.81-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.81-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.81.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16M12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.31-1.46.72-2.13 1.39C1.34 2.69.93 3.36.62 4.15.32 4.91.12 5.79.06 7.06.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.05 1.27.25 2.15.55 2.91.31.79.72 1.46 1.39 2.13.67.67 1.34 1.08 2.13 1.39.76.3 1.64.5 2.91.55C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c1.27-.05 2.15-.25 2.91-.55.79-.31 1.46-.72 2.13-1.39.67-.67 1.08-1.34 1.39-2.13.3-.76.5-1.64.55-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.05-1.27-.25-2.15-.55-2.91-.31-.79-.72-1.46-1.39-2.13C21.31 1.34 20.64.93 19.85.62 19.09.32 18.21.12 16.94.06 15.67.01 15.26 0 12 0zm0 5.84A6.16 6.16 0 0 0 5.84 12 6.16 6.16 0 0 0 12 18.16 6.16 6.16 0 0 0 18.16 12 6.16 6.16 0 0 0 12 5.84zm0 10.16A4 4 0 1 1 12 8a4 4 0 0 1 0 8zm6.4-11.85a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88z"/></svg>
+          @martinez_mecanicaautomotriz
+        </a>
+      </div>
+      <div class="footer-meta">Datos protegidos · Acceso de solo lectura</div>
+    </div>
+  </div>
+
+  <script>
+    const PRESUPUESTO_TOKEN = <?= JSON.stringify(presupuesto.Token_Publico || '') ?>;
+    const PRESUPUESTO_ID = <?= JSON.stringify(presupuesto.ID_Presupuesto || '') ?>;
+    const TALLER_INSTAGRAM = 'https://www.instagram.com/martinez_mecanicaautomotriz/';
+    const LOGO_URL = 'https://lh3.googleusercontent.com/d/1WDYg8rkNyRedO_ZINDX35eQyWNQdQ5yW';
+
+    (function initLogos() {
+      if (!LOGO_URL || LOGO_URL === 'PLACEHOLDER_LOGO_URL') return;
+      const slots = [
+        { img: 'logoTallerHeader', placeholder: 'logoPlaceholderHeader' },
+        { img: 'logoTallerFooter', placeholder: 'logoPlaceholderFooter' }
+      ];
+      slots.forEach(function (s) {
+        const img = document.getElementById(s.img);
+        const placeholder = document.getElementById(s.placeholder);
+        if (!img || !placeholder) return;
+        img.onload = function () { img.style.display = 'block'; placeholder.style.display = 'none'; };
+        img.onerror = function () { img.style.display = 'none'; placeholder.style.display = ''; };
+        img.src = LOGO_URL;
+      });
+    })();
+
+    function ejecutarAccionPublica(nombreFuncion, payload) {
+      return new Promise(function (resolve, reject) {
+        if (typeof google === 'undefined' || !google.script || !google.script.run) {
+          reject(new Error('Conexion con el servidor no disponible. Recargá la pagina.'));
+          return;
+        }
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(function (err) { reject(err); })
+          [nombreFuncion](payload);
+      });
+    }
+
+    function mostrarConfirmacion(tipo, mensaje) {
+      const bloque = document.getElementById('bloqueAcciones');
+      if (bloque) bloque.style.display = 'none';
+      const motivoBox = document.getElementById('motivoBox');
+      if (motivoBox) motivoBox.classList.remove('visible');
+
+      const box = document.getElementById('confirmacionBox');
+      box.style.display = 'block';
+      box.className = 'card confirmacion ' + tipo;
+      const icon = tipo === 'aprobado' ? 'OK' : 'X';
+      box.innerHTML =
+        '<div class="confirmacion-icon">' + icon + '</div>' +
+        '<h2>' + (tipo === 'aprobado' ? 'Presupuesto aprobado' : 'Presupuesto rechazado') + '</h2>' +
+        '<p>' + (mensaje || '') + '</p>' +
+        '<p style="margin-top:14px;">Ya podés cerrar esta ventana.</p>';
+      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function mostrarError(mensaje) {
+      alert(mensaje || 'Ocurrió un error. Intentá de nuevo.');
+    }
+
+    document.getElementById('btnAprobar').addEventListener('click', async function () {
+      if (!confirm('¿Aprobar este presupuesto?\n\nAl aprobar, se creará automáticamente un servicio en nuestro sistema.')) return;
+      const btn = this;
+      btn.disabled = true;
+      btn.textContent = 'Aprobando...';
+      try {
+        const r = await ejecutarAccionPublica('aprobarPresupuesto', { token: PRESUPUESTO_TOKEN });
+        if (r && r.ok) {
+          const msg = 'Servicio ' + (r.servicioId || '') + ' generado. Nos vamos a contactar para coordinar la fecha del trabajo.';
+          mostrarConfirmacion('aprobado', msg);
+        } else {
+          mostrarError((r && r.error) || 'No se pudo aprobar el presupuesto');
+          btn.disabled = false;
+          btn.textContent = 'Aprobar presupuesto';
+        }
+      } catch (err) {
+        mostrarError(err && err.message ? err.message : String(err));
+        btn.disabled = false;
+        btn.textContent = 'Aprobar presupuesto';
+      }
+    });
+
+    document.getElementById('btnToggleRechazar').addEventListener('click', function () {
+      const box = document.getElementById('motivoBox');
+      box.classList.toggle('visible');
+      if (box.classList.contains('visible')) {
+        setTimeout(function () { document.getElementById('motivoRechazo').focus(); }, 100);
+      }
+    });
+
+    document.getElementById('btnCancelarRechazo').addEventListener('click', function () {
+      document.getElementById('motivoBox').classList.remove('visible');
+      document.getElementById('motivoRechazo').value = '';
+    });
+
+    document.getElementById('btnConfirmarRechazo').addEventListener('click', async function () {
+      if (!confirm('¿Confirmar el rechazo de este presupuesto?')) return;
+      const motivo = document.getElementById('motivoRechazo').value.trim();
+      const btn = this;
+      btn.disabled = true;
+      btn.textContent = 'Enviando...';
+      try {
+        const r = await ejecutarAccionPublica('rechazarPresupuesto', { token: PRESUPUESTO_TOKEN, motivo: motivo });
+        if (r && r.ok) {
+          mostrarConfirmacion('rechazado', 'Gracias por avisarnos. Si cambiás de opinión, contactanos por WhatsApp.');
+        } else {
+          mostrarError((r && r.error) || 'No se pudo rechazar el presupuesto');
+          btn.disabled = false;
+          btn.textContent = 'Confirmar rechazo';
+        }
+      } catch (err) {
+        mostrarError(err && err.message ? err.message : String(err));
+        btn.disabled = false;
+        btn.textContent = 'Confirmar rechazo';
+      }
+    });
+  </script>
+</body>
+</html>
