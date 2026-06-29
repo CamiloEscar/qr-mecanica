@@ -14,6 +14,25 @@ function obtenerAdminKey() {
   return PropertiesService.getScriptProperties().getProperty('ADMIN_KEY');
 }
 
+/**
+ * Trigger de apertura del spreadsheet. Construye el menú "Catálogo" con las
+ * acciones de sembrado, migración y rollback del catálogo de marcas/modelos.
+ * Se ejecuta sólo dentro del editor de Sheets (los Web Apps no tienen UI),
+ * por eso se ignora silenciosamente cualquier excepción.
+ */
+function onOpen(e) {
+  try {
+    SpreadsheetApp.getUi()
+      .createMenu('Catálogo')
+      .addItem('Cargar catálogo…', 'cargarCatalogoMarcasModelos')
+      .addItem('Migrar marcas…', 'migrarMarcasExistentes')
+      .addItem('Eliminar catálogo', 'eliminarHojasCatalogo')
+      .addToUi();
+  } catch (err) {
+    // Web App contexts no exponen UI; se ignora el error.
+  }
+}
+
 const SHEETS = {
   CLIENTES: 'Clientes',
   VEHICULOS: 'Vehiculos',
@@ -21,7 +40,9 @@ const SHEETS = {
   ACCESOS_LOG: 'AccesosLog',
   TURNOS: 'Turnos',
   PRESUPUESTOS: 'Presupuestos',
-  PRESUPUESTOS_ITEMS: 'Presupuestos_Items'
+  PRESUPUESTOS_ITEMS: 'Presupuestos_Items',
+  MARCAS_MODELOS: 'Marcas_Modelos',
+  MODELOS_VERSIONES: 'Modelos_Versiones'
 };
 
 const COLUMNAS = {
@@ -31,7 +52,9 @@ const COLUMNAS = {
   ACCESOS_LOG: ['Timestamp', 'Token_Suffix', 'Email_O_Anonimo'],
   TURNOS: ['ID_Turno', 'Fecha_Hora', 'Duracion_Minutos', 'ID_Vehiculo', 'Tipo_Servicio', 'Descripcion', 'Estado', 'ID_Mecanico', 'Fecha_Creacion', 'Notas'],
   PRESUPUESTOS: ['ID_Presupuesto', 'Fecha', 'Fecha_Vencimiento', 'ID_Vehiculo', 'Estado', 'Subtotal', 'Total', 'Validez_Dias', 'Token_Publico', 'Notas', 'ID_Servicio', 'Fecha_Aprobacion'],
-  PRESUPUESTOS_ITEMS: ['ID_Item', 'ID_Presupuesto', 'Descripcion', 'Cantidad', 'Precio_Unitario', 'Subtotal_Item', 'Tipo']
+  PRESUPUESTOS_ITEMS: ['ID_Item', 'ID_Presupuesto', 'Descripcion', 'Cantidad', 'Precio_Unitario', 'Subtotal_Item', 'Tipo'],
+  MARCAS_MODELOS: ['ID', 'Marca', 'Modelo', 'Origen', 'Fecha_Alta'],
+  MODELOS_VERSIONES: ['Marca', 'Modelo', 'Versión']
 };
 
 const ESTADOS_PRESUPUESTO = {
@@ -204,6 +227,7 @@ function altaCliente(payload) {
 }
 
 function altaVehiculo(payload) {
+  _autoGrowCatalogo_(payload.marca, payload.modelo, payload.version || '');
   const sheet = obtenerSheet(SHEETS.VEHICULOS);
   const id = nextId(SHEETS.VEHICULOS, 'V');
   const token = generarTokenUnico();
@@ -313,7 +337,7 @@ function setupInicial() {
   }
 
   const ss = SpreadsheetApp.openById(sheetId);
-  const hojasACrear = ['Clientes', 'Vehiculos', 'Servicios', 'AccesosLog', 'Turnos', 'Presupuestos', 'Presupuestos_Items'];
+  const hojasACrear = ['Clientes', 'Vehiculos', 'Servicios', 'AccesosLog', 'Turnos', 'Presupuestos', 'Presupuestos_Items', 'Marcas_Modelos', 'Modelos_Versiones'];
   const headersPorHoja = {
     'Clientes': COLUMNAS.CLIENTES,
     'Vehiculos': COLUMNAS.VEHICULOS,
@@ -322,6 +346,8 @@ function setupInicial() {
     'Turnos': COLUMNAS.TURNOS,
     'Presupuestos': COLUMNAS.PRESUPUESTOS,
     'Presupuestos_Items': COLUMNAS.PRESUPUESTOS_ITEMS,
+    'Marcas_Modelos': COLUMNAS.MARCAS_MODELOS,
+    'Modelos_Versiones': COLUMNAS.MODELOS_VERSIONES,
   };
 
   hojasACrear.forEach(nombre => {
@@ -698,6 +724,7 @@ function altaClienteInterno(p) {
 }
 
 function altaVehiculoInterno(p) {
+  _autoGrowCatalogo_(p.marca, p.modelo, p.version || '');
   try {
     if (!p || !p.patente || !p.marca || !p.modelo) {
       return { ok: false, error: 'Patente, marca y modelo son obligatorios' };
@@ -841,6 +868,7 @@ function parsearFechaHora(s, fallback) {
 
 function altaTurnoInterno(payload) {
   try {
+    if (!obtenerSheet(SHEETS.TURNOS)) crearHojaTurnos();
     if (!payload || !payload.idVehiculo) return { ok: false, error: 'Falta el vehículo' };
     if (!payload.fechaHora) return { ok: false, error: 'Falta la fecha y hora' };
     if (!payload.tipoServicio) return { ok: false, error: 'Falta el tipo de servicio' };
@@ -883,6 +911,7 @@ function buscarFilaPorId(nombreSheet, nombreColumnaId, idBuscado) {
 
 function listarTurnos(filtros) {
   try {
+    if (!obtenerSheet(SHEETS.TURNOS)) crearHojaTurnos();
     const turnos = sheetAObjetos(SHEETS.TURNOS);
     const vehiculos = sheetAObjetos(SHEETS.VEHICULOS);
     const clientes = sheetAObjetos(SHEETS.CLIENTES);
@@ -939,6 +968,7 @@ function listarTurnos(filtros) {
 
 function actualizarTurnoInterno(payload) {
   try {
+    if (!obtenerSheet(SHEETS.TURNOS)) crearHojaTurnos();
     if (!payload || !payload.id) return { ok: false, error: 'Falta el ID del turno' };
     const fila = buscarFilaPorId(SHEETS.TURNOS, 'ID_Turno', payload.id);
     if (fila === -1) return { ok: false, error: 'Turno no encontrado: ' + payload.id };
@@ -977,6 +1007,7 @@ function actualizarTurnoInterno(payload) {
 
 function cancelarTurnoInterno(idTurno) {
   try {
+    if (!obtenerSheet(SHEETS.TURNOS)) crearHojaTurnos();
     if (!idTurno) return { ok: false, error: 'Falta el ID del turno' };
     const fila = buscarFilaPorId(SHEETS.TURNOS, 'ID_Turno', idTurno);
     if (fila === -1) return { ok: false, error: 'Turno no encontrado: ' + idTurno };
@@ -992,6 +1023,7 @@ function cancelarTurnoInterno(idTurno) {
 
 function completarTurnoInterno(idTurno) {
   try {
+    if (!obtenerSheet(SHEETS.TURNOS)) crearHojaTurnos();
     if (!idTurno) return { ok: false, error: 'Falta el ID del turno' };
     const fila = buscarFilaPorId(SHEETS.TURNOS, 'ID_Turno', idTurno);
     if (fila === -1) return { ok: false, error: 'Turno no encontrado: ' + idTurno };
@@ -2073,6 +2105,615 @@ function crearHojaTurnos() {
   }
 }
 
+/**
+ * Catálogo curado del mercado argentino: autos, clásicos, motos, camiones y
+ * maquinaria. Cada entrada tiene al menos 2-3 modelos top. El seed se inserta
+ * con Origen='seed' y las filas son inmutables (Q1 del design): un re-run no
+ * duplica porque la clave única es (lower(Marca), lower(Modelo)).
+ */
+const MARCAS_MODELOS_SEED = [
+  // AUTOS
+  { marca: 'Toyota', modelos: ['Hilux', 'Etios', 'Corolla', 'Yaris', 'RAV4', 'Land Cruiser'] },
+  { marca: 'Ford', modelos: ['Ranger', 'Focus', 'Fiesta', 'Ka', 'Ecosport', 'Mondeo', 'Territory', 'Bronco'] },
+  { marca: 'Volkswagen', modelos: ['Gol', 'Voyage', 'Fox', 'Polo', 'Vento', 'Amarok', 'Tiguan', 'Nivus', 'T-Cross'] },
+  { marca: 'Chevrolet', modelos: ['Onix', 'Prisma', 'Cruze', 'Tracker', 'S10', 'Spin', 'Equinox', 'Montana'] },
+  { marca: 'Renault', modelos: ['Kwid', 'Sandero', 'Logan', 'Duster', 'Captur', 'Stepway', 'Kangoo'] },
+  { marca: 'Fiat', modelos: ['Cronos', 'Argo', 'Mobi', 'Pulse', 'Fastback', 'Toro', '500', 'Uno'] },
+  { marca: 'Peugeot', modelos: ['208', '2008', '308', '3008', '408', 'Partner', '5008'] },
+  { marca: 'Citroën', modelos: ['C3', 'C4 Cactus', 'Berlingo', 'C5 Aircross'] },
+  { marca: 'Honda', modelos: ['Civic', 'Accord', 'CR-V', 'HR-V', 'Fit', 'City', 'WR-V'] },
+  { marca: 'Nissan', modelos: ['Frontier', 'Kicks', 'Versa', 'Sentra', 'X-Trail', 'Murano'] },
+  { marca: 'Jeep', modelos: ['Renegade', 'Compass', 'Wrangler', 'Cherokee', 'Gladiator'] },
+  { marca: 'Hyundai', modelos: ['HB20', 'Creta', 'Tucson', 'Santa Fe', 'Kona', 'i10', 'i20'] },
+  { marca: 'Kia', modelos: ['Picanto', 'Rio', 'Cerato', 'Sportage', 'Sorento', 'Seltos'] },
+  { marca: 'Mitsubishi', modelos: ['L200', 'Outlander', 'ASX', 'Eclipse Cross', 'Pajero'] },
+  { marca: 'Subaru', modelos: ['Forester', 'Outback', 'XV', 'Impreza', 'Legacy'] },
+  { marca: 'Suzuki', modelos: ['Swift', 'Vitara', 'Jimny', 'S-Cross', 'Baleno'] },
+  { marca: 'Mazda', modelos: ['CX-3', 'CX-5', 'CX-30', 'Mazda2', 'Mazda3', 'BT-50'] },
+  { marca: 'Daihatsu', modelos: ['Terios', 'Sirion', 'Move'] },
+  { marca: 'Lexus', modelos: ['IS', 'ES', 'RX', 'NX', 'UX'] },
+  { marca: 'Mercedes-Benz', modelos: ['Clase A', 'Clase C', 'Clase E', 'GLA', 'GLC', 'Sprinter', 'Vito'] },
+  { marca: 'BMW', modelos: ['Serie 1', 'Serie 3', 'Serie 5', 'X1', 'X3', 'X5', 'X6'] },
+  { marca: 'Audi', modelos: ['A1', 'A3', 'A4', 'Q3', 'Q5', 'Q7'] },
+  { marca: 'Porsche', modelos: ['Cayenne', 'Macan', '911', 'Panamera', 'Taycan', 'Boxster'] },
+  { marca: 'Lamborghini', modelos: ['Huracán', 'Urus', 'Aventador'] },
+  { marca: 'Ferrari', modelos: ['488', 'Roma', 'F8', 'Portofino', 'SF90'] },
+  { marca: 'Maserati', modelos: ['Ghibli', 'Quattroporte', 'Levante', 'MC20'] },
+  { marca: 'Aston Martin', modelos: ['Vantage', 'DB11', 'DBX'] },
+  { marca: 'McLaren', modelos: ['720S', 'GT', 'Artura'] },
+  { marca: 'Bentley', modelos: ['Continental', 'Bentayga', 'Flying Spur'] },
+  { marca: 'Rolls-Royce', modelos: ['Ghost', 'Phantom', 'Cullinan'] },
+  { marca: 'Jaguar', modelos: ['F-Pace', 'E-Pace', 'XE', 'XF'] },
+  { marca: 'Land Rover', modelos: ['Defender', 'Discovery', 'Range Rover', 'Evoque', 'Velar'] },
+  { marca: 'Mini', modelos: ['Cooper', 'Countryman', 'One'] },
+  { marca: 'Volvo', modelos: ['XC40', 'XC60', 'XC90', 'S60'] },
+  { marca: 'Saab', modelos: ['9-3', '9-5'] },
+  { marca: 'Smart', modelos: ['Fortwo', 'Forfour'] },
+  { marca: 'Alfa Romeo', modelos: ['Giulietta', 'Stelvio', 'Giulia', 'MiTo'] },
+  { marca: 'Lancia', modelos: ['Ypsilon', 'Delta'] },
+  { marca: 'MG', modelos: ['ZR', 'ZS', 'HS', 'MG5'] },
+  { marca: 'Geely', modelos: ['Emgrand', 'Coolray', 'GX3'] },
+  { marca: 'Chery', modelos: ['Tiggo', 'QQ', 'Fulwin', 'Arrizo'] },
+  { marca: 'JAC', modelos: ['S2', 'S3', 'S5', 'T6', 'JS2'] },
+  { marca: 'DFSK', modelos: ['Glory', 'Glory 580', 'Seres 3'] },
+  { marca: 'Foton', modelos: ['Tunland', 'Gratour'] },
+  { marca: 'Baic', modelos: ['X35', 'X55', 'D20'] },
+  { marca: 'Changan', modelos: ['CS15', 'CS35', 'CS55', 'MD201'] },
+  { marca: 'Great Wall', modelos: ['Wingle', 'Poer'] },
+  { marca: 'Haval', modelos: ['H1', 'H2', 'H6', 'Jolion'] },
+  { marca: 'Jetour', modelos: ['X70', 'X90', 'X70 Plus'] },
+  { marca: 'ZX Auto', modelos: ['Grand Tiger', 'Admiral'] },
+
+  // CLASICOS
+  { marca: 'Falcon', modelos: ['Falcon', 'Falcon Sprint'] },
+  { marca: 'Torino', modelos: ['Torino 380', 'Torino TS'] },
+  { marca: 'Sierra', modelos: ['Sierra GL', 'Sierra Ghia'] },
+  { marca: '1500', modelos: ['1500 Standard', '1500 SS'] },
+  { marca: 'Gordini', modelos: ['Gordini 850', 'Gordini 1100'] },
+  { marca: 'Fiat 600', modelos: ['600 D', '600 R'] },
+  { marca: 'Fiat 128', modelos: ['128 IAVA', '128 SE'] },
+  { marca: 'Rastrojero', modelos: ['Rastrojero 42', 'Rastrojero Diesel'] },
+  { marca: 'De Carlo', modelos: ['De Carlo 700'] },
+  { marca: 'Savoia', modelos: ['Savoia Jankov'] },
+  { marca: 'Di Tella', modelos: ['Di Tella 700'] },
+  { marca: 'Dodge', modelos: ['Dart', 'Valiant', 'Polara'] },
+  { marca: 'Pontiac', modelos: ['GTO', 'Firebird'] },
+  { marca: 'Plymouth', modelos: ['Valiant', 'Barracuda'] },
+  { marca: 'Oldsmobile', modelos: ['Cutlass', 'Delta 88'] },
+
+  // MOTOS
+  { marca: 'Yamaha', modelos: ['FZ', 'MT', 'YBR', 'XTZ', 'R6', 'R1', 'NMAX'] },
+  { marca: 'Kawasaki', modelos: ['Ninja', 'Z', 'KLR', 'Versys', 'Vulcan'] },
+  { marca: 'KTM', modelos: ['Duke', 'RC', 'Adventure', 'EXC'] },
+  { marca: 'Ducati', modelos: ['Monster', 'Multistrada', 'Panigale', 'Scrambler'] },
+  { marca: 'Harley-Davidson', modelos: ['Sportster', 'Softail', 'Touring', 'Street'] },
+  { marca: 'BMW Motos', modelos: ['R 1200', 'F 800', 'G 650', 'S 1000'] },
+  { marca: 'Triumph', modelos: ['Bonneville', 'Tiger', 'Street Triple', 'Speed Triple'] },
+  { marca: 'Indian', modelos: ['Scout', 'Chief', 'Chieftain', 'FTR'] },
+  { marca: 'Royal Enfield', modelos: ['Classic', 'Bullet', 'Himalayan', 'Meteor'] },
+  { marca: 'Benelli', modelos: ['TNT', 'TRK', 'Imperiale'] },
+  { marca: 'Kymco', modelos: ['Agility', 'Like', 'Downtown'] },
+  { marca: 'Gilera', modelos: ['Smash', 'Sahel', 'VC'] },
+  { marca: 'Zanella', modelos: ['ZB', 'RX', 'Custom'] },
+  { marca: 'Mondial', modelos: ['RD', 'AC', 'LD'] },
+  { marca: 'Corven', modelos: ['Energy', 'Hunter', 'Tria'] },
+  { marca: 'Cerro', modelos: ['CE 110', 'CE 150'] },
+  { marca: 'Bajaj', modelos: ['Rouser', 'Dominar', 'Pulsar'] },
+  { marca: 'TVS', modelos: ['Apache', 'Ronin'] },
+  { marca: 'Hero', modelos: ['Hunk', 'Glamour', 'Passion'] },
+
+  // CAMIONES
+  { marca: 'Iveco', modelos: ['Tector', 'Stralis', 'Cursor', 'Daily'] },
+  { marca: 'Scania', modelos: ['R 450', 'G 410', 'P 280'] },
+  { marca: 'Volvo Camiones', modelos: ['FH', 'FM', 'VM'] },
+  { marca: 'Mercedes-Benz Camiones', modelos: ['Actros', 'Atego', 'Vario'] },
+  { marca: 'Ford Cargo', modelos: ['1722', '1517', '1119'] },
+  { marca: 'VW Constellation', modelos: ['17280', '24280', '31280'] },
+
+  // MAQUINARIA
+  { marca: 'John Deere', modelos: ['6110', '7210', '8370', '5090'] },
+  { marca: 'Massey Ferguson', modelos: ['MF 4707', 'MF 6713', 'MF 7722'] },
+  { marca: 'New Holland', modelos: ['T7', 'T8', 'TT4'] },
+  { marca: 'Case IH', modelos: ['Magnum', 'Maxxum', 'Farmall'] },
+  { marca: 'Deutz', modelos: ['Fahr 5', 'Fahr 6'] },
+  { marca: 'Valtra', modelos: ['A134', 'BH180', 'T195'] }
+];
+
+/**
+ * Versiones curadas (~30 pares marca|modelo). Sólo los modelos con variantes
+ * conocidas reciben lista cerrada; el resto autogrowea desde el form.
+ * Clave de duplicado: (lower(marca), lower(modelo), lower(version)).
+ */
+const MODELOS_VERSIONES_SEED = [
+  { marca: 'Toyota', modelo: 'Hilux', versiones: ['Cabina Simple', 'Doble Cabina', 'GR Sport'] },
+  { marca: 'Toyota', modelo: 'Etios', versiones: ['Sedán 4p', 'Hatch 5p', 'XLS'] },
+  { marca: 'Toyota', modelo: 'Corolla', versiones: ['XEi', 'XLS', 'SEG'] },
+  { marca: 'Toyota', modelo: 'Yaris', versiones: ['Sedán', 'Hatch'] },
+  { marca: 'Toyota', modelo: 'RAV4', versiones: ['4x2', '4x4'] },
+  { marca: 'Toyota', modelo: 'Land Cruiser', versiones: ['Prado', 'Full'] },
+  { marca: 'Ford', modelo: 'Ranger', versiones: ['Cabina Simple', 'Doble Cabina', 'Raptor'] },
+  { marca: 'Ford', modelo: 'Focus', versiones: ['4p', '5p'] },
+  { marca: 'Ford', modelo: 'Bronco', versiones: ['Sport', 'Badlands'] },
+  { marca: 'Volkswagen', modelo: 'Gol', versiones: ['Trendline', 'Comfortline', 'Highline'] },
+  { marca: 'Volkswagen', modelo: 'Polo', versiones: ['MSI', 'Highline', 'GTS'] },
+  { marca: 'Volkswagen', modelo: 'Amarok', versiones: ['Comfortline', 'Highline', 'V6'] },
+  { marca: 'Volkswagen', modelo: 'Nivus', versiones: ['MSI', 'Highline'] },
+  { marca: 'Chevrolet', modelo: 'Onix', versiones: ['LT', 'LTZ', 'Premier'] },
+  { marca: 'Chevrolet', modelo: 'Cruze', versiones: ['LT', 'LTZ'] },
+  { marca: 'Chevrolet', modelo: 'S10', versiones: ['LT', 'LTZ', 'High Country'] },
+  { marca: 'Chevrolet', modelo: 'Tracker', versiones: ['LT', 'LTZ', 'Premier'] },
+  { marca: 'Renault', modelo: 'Kwid', versiones: ['Life', 'Zen', 'Intens'] },
+  { marca: 'Renault', modelo: 'Sandero', versiones: ['Life', 'Zen', 'Intens'] },
+  { marca: 'Renault', modelo: 'Duster', versiones: ['Zen', 'Intens', 'Icon'] },
+  { marca: 'Fiat', modelo: 'Cronos', versiones: ['1.3', '1.8', 'Precision'] },
+  { marca: 'Fiat', modelo: 'Argo', versiones: ['Drive', 'Trekking', 'HGT'] },
+  { marca: 'Fiat', modelo: 'Pulse', versiones: ['Drive', 'Audace', 'Impetus'] },
+  { marca: 'Peugeot', modelo: '208', versiones: ['Allure', 'Feline', 'GT'] },
+  { marca: 'Peugeot', modelo: '2008', versiones: ['Allure', 'Feline', 'GT'] },
+  { marca: 'Jeep', modelo: 'Renegade', versiones: ['Sport', 'Longitude', 'Trailhawk'] },
+  { marca: 'Jeep', modelo: 'Compass', versiones: ['Sport', 'Longitude', 'Limited'] },
+  { marca: 'Nissan', modelo: 'Frontier', versiones: ['S', 'XE', 'LE'] },
+  { marca: 'Hyundai', modelo: 'Creta', versiones: ['GLS', 'GL', 'Limited'] },
+  { marca: 'Kia', modelo: 'Sportage', versiones: ['LX', 'EX', 'GT'] }
+];
+
+/**
+ * Mapa de aliases para normalización de marca/modelo. Case-insensitive.
+ * Se aplica DESPUES del Title Case sobre la primera palabra del string.
+ * Ej: 'vw' → 'Volkswagen', 'chevr' → 'Chevrolet', 'citroen' → 'Citroën'.
+ */
+const ALIASES_MARCA = {
+  'vw': 'Volkswagen',
+  'chevro': 'Chevrolet',
+  'chevr': 'Chevrolet',
+  'merced': 'Mercedes-Benz',
+  'bmw': 'BMW',
+  'citroen': 'Citroën',
+  'mb': 'Mercedes-Benz'
+};
+
+/**
+ * Normaliza un string de marca o modelo:
+ * 1) trim y colapso de espacios en blanco
+ * 2) Title Case (primera letra mayúscula, resto minúscula por palabra)
+ * 3) Alias map sobre la primera palabra (case-insensitive)
+ * Pure fn — sin efectos colaterales, sin llamadas a Sheets.
+ *
+ * Q2: esta función está DUPLICADA en `AdminPage.html` (inline, dentro del
+ * <script>) para evitar round-trip al backend en el pre-submit. Si modificás
+ * la lógica acá (incluido el mapa `ALIASES_MARCA`), actualizá también el
+ * duplicado en `AdminPage.html` cerca de la línea 4228.
+ */
+function normalizarMarcaModelo(s) {
+  if (s === null || s === undefined) return '';
+  const trimmed = String(s).trim().replace(/\s+/g, ' ');
+  if (!trimmed) return '';
+  const titled = trimmed.split(' ').map(function (w) {
+    if (!w) return w;
+    return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+  }).join(' ');
+  const lowerKey = titled.toLowerCase().split(' ')[0];
+  if (Object.prototype.hasOwnProperty.call(ALIASES_MARCA, lowerKey)) {
+    const canonical = ALIASES_MARCA[lowerKey];
+    return titled.replace(/^\S+/, canonical);
+  }
+  return titled;
+}
+
+/**
+ * Crea la hoja Marcas_Modelos idempotentemente. Espejo de crearHojaTurnos.
+ * Devuelve {ok, mensaje, accion} donde accion ∈ {creada, headers actualizados, ninguna}.
+ */
+function crearHojaMarcasModelos() {
+  try {
+    const ss = SpreadsheetApp.openById(obtenerSheetId());
+    let hoja = ss.getSheetByName(SHEETS.MARCAS_MODELOS);
+    if (hoja) {
+      const headersActuales = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0];
+      const headersEsperados = COLUMNAS.MARCAS_MODELOS;
+      const headersCoinciden = headersEsperados.every(function (h, i) { return headersActuales[i] === h; }) &&
+        headersActuales.length === headersEsperados.length;
+      if (headersCoinciden) {
+        return { ok: true, mensaje: 'La hoja Marcas_Modelos ya existe con headers correctos', accion: 'ninguna' };
+      }
+      hoja.getRange(1, 1, 1, headersEsperados.length)
+        .setValues([headersEsperados])
+        .setFontWeight('bold')
+        .setBackground('#e2e8f0');
+      return { ok: true, mensaje: 'La hoja Marcas_Modelos ya existía; headers normalizados', accion: 'headers actualizados' };
+    }
+    hoja = ss.insertSheet(SHEETS.MARCAS_MODELOS);
+    hoja.getRange(1, 1, 1, COLUMNAS.MARCAS_MODELOS.length)
+      .setValues([COLUMNAS.MARCAS_MODELOS]);
+    hoja.getRange(1, 1, 1, COLUMNAS.MARCAS_MODELOS.length)
+      .setFontWeight('bold')
+      .setBackground('#e2e8f0');
+    hoja.setFrozenRows(1);
+    return { ok: true, mensaje: 'Hoja Marcas_Modelos creada correctamente', accion: 'creada' };
+  } catch (err) {
+    return { ok: false, error: 'No se pudo crear la hoja Marcas_Modelos: ' + (err && err.message ? err.message : err) };
+  }
+}
+
+/**
+ * Crea la hoja Modelos_Versiones idempotentemente. Al crear (no en re-runs),
+ * siembra las versiones curadas de MODELOS_VERSIONES_SEED.
+ */
+function crearHojaModelosVersiones() {
+  try {
+    const ss = SpreadsheetApp.openById(obtenerSheetId());
+    let hoja = ss.getSheetByName(SHEETS.MODELOS_VERSIONES);
+    if (hoja) {
+      const headersActuales = hoja.getRange(1, 1, 1, hoja.getLastColumn()).getValues()[0];
+      const headersEsperados = COLUMNAS.MODELOS_VERSIONES;
+      const headersCoinciden = headersEsperados.every(function (h, i) { return headersActuales[i] === h; }) &&
+        headersActuales.length === headersEsperados.length;
+      if (headersCoinciden) {
+        return { ok: true, mensaje: 'La hoja Modelos_Versiones ya existe con headers correctos', accion: 'ninguna' };
+      }
+      hoja.getRange(1, 1, 1, headersEsperados.length)
+        .setValues([headersEsperados])
+        .setFontWeight('bold')
+        .setBackground('#e2e8f0');
+      return { ok: true, mensaje: 'La hoja Modelos_Versiones ya existía; headers normalizados', accion: 'headers actualizados' };
+    }
+    hoja = ss.insertSheet(SHEETS.MODELOS_VERSIONES);
+    hoja.getRange(1, 1, 1, COLUMNAS.MODELOS_VERSIONES.length)
+      .setValues([COLUMNAS.MODELOS_VERSIONES]);
+    hoja.getRange(1, 1, 1, COLUMNAS.MODELOS_VERSIONES.length)
+      .setFontWeight('bold')
+      .setBackground('#e2e8f0');
+    hoja.setFrozenRows(1);
+    // Seed de versiones curadas — sólo en creación
+    const filasVersiones = [];
+    MODELOS_VERSIONES_SEED.forEach(function (par) {
+      const marcaN = normalizarMarcaModelo(par.marca);
+      const modeloN = normalizarMarcaModelo(par.modelo);
+      par.versiones.forEach(function (ver) {
+        filasVersiones.push([marcaN, modeloN, ver]);
+      });
+    });
+    if (filasVersiones.length > 0) {
+      hoja.getRange(2, 1, filasVersiones.length, 3).setValues(filasVersiones);
+    }
+    return { ok: true, mensaje: 'Hoja Modelos_Versiones creada correctamente', accion: 'creada', versionesSembradas: filasVersiones.length };
+  } catch (err) {
+    return { ok: false, error: 'No se pudo crear la hoja Modelos_Versiones: ' + (err && err.message ? err.message : err) };
+  }
+}
+
+/**
+ * Rollback completo del catálogo: elimina ambas hojas si existen y borra
+ * la clave de caché. Idempotente — llamar dos veces no produce error.
+ */
+function eliminarHojasCatalogo() {
+  try {
+    const ss = SpreadsheetApp.openById(obtenerSheetId());
+    [SHEETS.MARCAS_MODELOS, SHEETS.MODELOS_VERSIONES].forEach(function (nombre) {
+      const hoja = ss.getSheetByName(nombre);
+      if (hoja) ss.deleteSheet(hoja);
+    });
+    CacheService.getScriptCache().remove('catalogoVehiculos_v1');
+    return { ok: true, mensaje: 'Catálogo eliminado' };
+  } catch (err) {
+    return { ok: false, error: 'No se pudo eliminar el catálogo: ' + (err && err.message ? err.message : err) };
+  }
+}
+
+/**
+ * Reconstruye el árbol del catálogo desde Sheets y lo guarda en cache.
+ * Estructura: { ts, marcas, modelosPorMarca, versionesPorModelo }.
+ * TTL 6h (21600 s). Read-only respecto de Sheets.
+ */
+function _rebuildCache_() {
+  const tree = { ts: Date.now(), marcas: [], modelosPorMarca: {}, versionesPorModelo: {} };
+  try {
+    const ss = SpreadsheetApp.openById(obtenerSheetId());
+    const modelosPorMarca = {};
+    const versionesPorModelo = {};
+
+    const sheetMM = ss.getSheetByName(SHEETS.MARCAS_MODELOS);
+    if (sheetMM) {
+      const data = sheetMM.getDataRange().getValues();
+      for (let i = 1; i < data.length; i++) {
+        const marcaN = normalizarMarcaModelo(data[i][1]);
+        const modeloN = normalizarMarcaModelo(data[i][2]);
+        if (!marcaN || !modeloN) continue;
+        if (!modelosPorMarca[marcaN]) modelosPorMarca[marcaN] = [];
+        if (modelosPorMarca[marcaN].indexOf(modeloN) === -1) modelosPorMarca[marcaN].push(modeloN);
+      }
+    }
+
+    const sheetMV = ss.getSheetByName(SHEETS.MODELOS_VERSIONES);
+    if (sheetMV) {
+      const data = sheetMV.getDataRange().getValues();
+      for (let i = 1; i < data.length; i++) {
+        const marcaN = normalizarMarcaModelo(data[i][0]);
+        const modeloN = normalizarMarcaModelo(data[i][1]);
+        const ver = String(data[i][2] || '').trim();
+        if (!marcaN || !modeloN || !ver) continue;
+        const key = marcaN + '|' + modeloN;
+        if (!versionesPorModelo[key]) versionesPorModelo[key] = [];
+        if (versionesPorModelo[key].indexOf(ver) === -1) versionesPorModelo[key].push(ver);
+      }
+    }
+
+    const marcas = Object.keys(modelosPorMarca).sort();
+    tree.marcas = marcas;
+    for (let i = 0; i < marcas.length; i++) {
+      const m = marcas[i];
+      tree.modelosPorMarca[m] = modelosPorMarca[m].slice().sort();
+      for (let j = 0; j < tree.modelosPorMarca[m].length; j++) {
+        const modelo = tree.modelosPorMarca[m][j];
+        const key = m + '|' + modelo;
+        tree.versionesPorModelo[key] = (versionesPorModelo[key] || []).slice().sort();
+      }
+    }
+
+    try {
+      CacheService.getScriptCache().put('catalogoVehiculos_v1', JSON.stringify(tree), 21600);
+    } catch (cacheErr) {
+      Logger.log('Warning: no se pudo escribir cache catalogo: ' + (cacheErr && cacheErr.message ? cacheErr.message : cacheErr));
+    }
+  } catch (err) {
+    Logger.log('Error en _rebuildCache_: ' + (err && err.message ? err.message : err));
+  }
+  return tree;
+}
+
+/**
+ * Devuelve el árbol completo desde cache. Si la key falta o está corrupta,
+ * reconstruye desde Sheets. Read-only.
+ */
+function _obtenerOCrearArbol_() {
+  const cache = CacheService.getScriptCache();
+  const cached = cache.get('catalogoVehiculos_v1');
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached);
+      if (parsed && parsed.marcas && parsed.modelosPorMarca && parsed.versionesPorModelo) {
+        return parsed;
+      }
+    } catch (err) {
+      // cache corrupto, rebuild
+    }
+  }
+  return _rebuildCache_();
+}
+
+/**
+ * Lista canónica de marcas. Cache-hit evita leer Sheets.
+ */
+function listarMarcas() {
+  try {
+    const tree = _obtenerOCrearArbol_();
+    return (tree.marcas || []).slice();
+  } catch (err) {
+    Logger.log('Error en listarMarcas: ' + (err && err.message ? err.message : err));
+    return [];
+  }
+}
+
+/**
+ * Lista de modelos de una marca. Array vacío si la marca no existe.
+ * Cache-hit evita leer Sheets.
+ */
+function listarModelos(marca) {
+  try {
+    const marcaN = normalizarMarcaModelo(marca);
+    if (!marcaN) return [];
+    const tree = _obtenerOCrearArbol_();
+    return (tree.modelosPorMarca[marcaN] || []).slice();
+  } catch (err) {
+    Logger.log('Error en listarModelos: ' + (err && err.message ? err.message : err));
+    return [];
+  }
+}
+
+/**
+ * Lista de versiones curadas de (marca, modelo). Array vacío si el par
+ * no tiene variantes curadas (R6) — el frontend debe revelar input libre.
+ * Cache-hit evita leer Sheets.
+ */
+function listarVersiones(marca, modelo) {
+  try {
+    const marcaN = normalizarMarcaModelo(marca);
+    const modeloN = normalizarMarcaModelo(modelo);
+    if (!marcaN || !modeloN) return [];
+    const tree = _obtenerOCrearArbol_();
+    const key = marcaN + '|' + modeloN;
+    return (tree.versionesPorModelo[key] || []).slice();
+  } catch (err) {
+    Logger.log('Error en listarVersiones: ' + (err && err.message ? err.message : err));
+    return [];
+  }
+}
+
+/**
+ * Upsert idempotente de un par (marca, modelo) y opcionalmente versión.
+ * Q1: si el par lowercase ya existe en Marcas_Modelos, NO upserts (skip).
+ * Si llega `version` no-vacía y el trío es nuevo, también appends
+ * Modelos_Versiones. Invalida el cache tras upsert exitoso.
+ */
+function registrarMarcaModelo(p) {
+  try {
+    const marca = normalizarMarcaModelo(p && p.marca || '');
+    const modelo = normalizarMarcaModelo(p && p.modelo || '');
+    const version = (p && p.version || '').toString().trim();
+    const origen = (p && p.origen) || 'user';
+    if (!marca || !modelo) {
+      return { ok: false, error: 'Falta marca o modelo' };
+    }
+
+    const ss = SpreadsheetApp.openById(obtenerSheetId());
+    const sheetMM = ss.getSheetByName(SHEETS.MARCAS_MODELOS);
+    if (!sheetMM) return { ok: false, error: 'No existe la hoja Marcas_Modelos' };
+
+    const pairKeyLower = marca.toLowerCase() + '|' + modelo.toLowerCase();
+    const data = sheetMM.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      const m = String(data[i][1] || '').trim().toLowerCase();
+      const mo = String(data[i][2] || '').trim().toLowerCase();
+      if (m + '|' + mo === pairKeyLower) {
+        // Q1: par ya existe, no upsert
+        return { ok: true, accion: 'ya_existente', marca: marca, modelo: modelo };
+      }
+    }
+
+    const id = nextId(SHEETS.MARCAS_MODELOS, 'MM');
+    sheetMM.appendRow([id, marca, modelo, origen, ahoraComoString()]);
+
+    if (version) {
+      const sheetMV = ss.getSheetByName(SHEETS.MODELOS_VERSIONES);
+      if (sheetMV) {
+        const dataMV = sheetMV.getDataRange().getValues();
+        const trioLower = marca.toLowerCase() + '|' + modelo.toLowerCase() + '|' + version.toLowerCase();
+        let yaExiste = false;
+        for (let i = 1; i < dataMV.length; i++) {
+          const m = String(dataMV[i][0] || '').trim().toLowerCase();
+          const mo = String(dataMV[i][1] || '').trim().toLowerCase();
+          const v = String(dataMV[i][2] || '').trim().toLowerCase();
+          if (m + '|' + mo + '|' + v === trioLower) { yaExiste = true; break; }
+        }
+        if (!yaExiste) {
+          sheetMV.appendRow([marca, modelo, version]);
+        }
+      }
+    }
+
+    try { CacheService.getScriptCache().remove('catalogoVehiculos_v1'); } catch (e) {}
+
+    return { ok: true, accion: 'insertado', marca: marca, modelo: modelo };
+  } catch (err) {
+    return { ok: false, error: 'No se pudo registrar la marca/modelo: ' + (err && err.message ? err.message : err) };
+  }
+}
+
+/**
+ * Wrapper defensivo sobre registrarMarcaModelo. R4: una falla de catálogo
+ * NO debe romper el alta de vehículo. Loguea y sigue.
+ */
+function _autoGrowCatalogo_(marca, modelo, version) {
+  try {
+    if (!marca || !modelo) return;
+    const res = registrarMarcaModelo({ marca: marca, modelo: modelo, version: version || '', origen: 'user' });
+    if (res && !res.ok) {
+      Logger.log('catalogo auto-grow failed: ' + (res.error || 'unknown'));
+    }
+  } catch (e) {
+    Logger.log('catalogo auto-grow failed: ' + (e && e.message ? e.message : e));
+  }
+}
+
+/**
+ * Carga el seed curado (MARCAS_MODELOS_SEED) en Marcas_Modelos. Idempotente
+ * vía Q1. Si las hojas no existen, las crea primero. También siembra las
+ * versiones curadas (MODELOS_VERSIONES_SEED) en Modelos_Versiones,
+ * deduplicando por trío (marca, modelo, version) lowercase.
+ */
+function cargarCatalogoMarcasModelos() {
+  try {
+    crearHojaMarcasModelos();
+    crearHojaModelosVersiones();
+
+    let insertados = 0;
+    let yaExistentes = 0;
+
+    MARCAS_MODELOS_SEED.forEach(function (entry) {
+      entry.modelos.forEach(function (modelo) {
+        const res = registrarMarcaModelo({ marca: entry.marca, modelo: modelo, origen: 'seed' });
+        if (res && res.ok) {
+          if (res.accion === 'insertado') insertados++;
+          else yaExistentes++;
+        }
+      });
+    });
+
+    // Sembrar versiones curadas directamente, dedup por trío lowercase.
+    // Bypass Q1: registrarMarcaModelo no agrega versiones cuando el par
+    // ya existe (caso típico del re-seed), por eso este path separado.
+    const ss = SpreadsheetApp.openById(obtenerSheetId());
+    const sheetMV = ss.getSheetByName(SHEETS.MODELOS_VERSIONES);
+    if (sheetMV) {
+      const dataMV = sheetMV.getDataRange().getValues();
+      const existentes = new Set();
+      for (let i = 1; i < dataMV.length; i++) {
+        const a = String(dataMV[i][0] || '').trim().toLowerCase();
+        const b = String(dataMV[i][1] || '').trim().toLowerCase();
+        const c = String(dataMV[i][2] || '').trim().toLowerCase();
+        if (a && b && c) existentes.add(a + '|' + b + '|' + c);
+      }
+      const filasVersiones = [];
+      MODELOS_VERSIONES_SEED.forEach(function (par) {
+        const marcaN = normalizarMarcaModelo(par.marca);
+        const modeloN = normalizarMarcaModelo(par.modelo);
+        par.versiones.forEach(function (ver) {
+          const verLimpia = String(ver || '').trim();
+          if (!verLimpia) return;
+          const trioLower = marcaN.toLowerCase() + '|' + modeloN.toLowerCase() + '|' + verLimpia.toLowerCase();
+          if (!existentes.has(trioLower)) {
+            filasVersiones.push([marcaN, modeloN, verLimpia]);
+            existentes.add(trioLower);
+          }
+        });
+      });
+      if (filasVersiones.length > 0) {
+        const startRow = sheetMV.getLastRow() + 1;
+        sheetMV.getRange(startRow, 1, filasVersiones.length, 3).setValues(filasVersiones);
+      }
+    }
+
+    try { CacheService.getScriptCache().remove('catalogoVehiculos_v1'); } catch (e) {}
+
+    return { ok: true, insertados: insertados, ya_existentes: yaExistentes };
+  } catch (err) {
+    return { ok: false, error: 'No se pudo cargar el catálogo: ' + (err && err.message ? err.message : err) };
+  }
+}
+
+/**
+ * Migra Marcas/Modelos existentes en Vehiculos al catálogo. Aplica
+ * normalización completa (incluye aliases como vw→Volkswagen). Dedup
+ * vía Q1 (par lowercase). Devuelve métrica de aliases aplicados.
+ */
+function migrarMarcasExistentes() {
+  try {
+    crearHojaMarcasModelos();
+
+    const ss = SpreadsheetApp.openById(obtenerSheetId());
+    const sheetV = ss.getSheetByName(SHEETS.VEHICULOS);
+    if (!sheetV) return { ok: false, error: 'No existe la hoja Vehiculos' };
+
+    const data = sheetV.getDataRange().getValues();
+    let insertados = 0;
+    let yaExistentes = 0;
+    let aliasesAplicados = 0;
+
+    for (let i = 1; i < data.length; i++) {
+      const marcaOrig = String(data[i][5] || '').trim();
+      const modeloOrig = String(data[i][6] || '').trim();
+      if (!marcaOrig || !modeloOrig) continue;
+      const marcaN = normalizarMarcaModelo(marcaOrig);
+      const modeloN = normalizarMarcaModelo(modeloOrig);
+      if (marcaN !== marcaOrig || modeloN !== modeloOrig) aliasesAplicados++;
+      const res = registrarMarcaModelo({ marca: marcaN, modelo: modeloN, origen: 'migration' });
+      if (res && res.ok) {
+        if (res.accion === 'insertado') insertados++;
+        else yaExistentes++;
+      }
+    }
+
+    return {
+      ok: true,
+      insertados: insertados,
+      ya_existentes: yaExistentes,
+      aliases_aplicados: aliasesAplicados
+    };
+  } catch (err) {
+    return { ok: false, error: 'No se pudieron migrar las marcas: ' + (err && err.message ? err.message : err) };
+  }
+}
+
 function cargarDatosDemoMasivos() {
   const ss = SpreadsheetApp.openById(obtenerSheetId());
   const sheetClientes = ss.getSheetByName('Clientes');
@@ -2573,5 +3214,153 @@ function limpiarDatosDemo() {
     ok: true,
     mensaje: 'Limpieza completa. El Sheet queda listo para datos reales.',
     reporte: reporte
+  };
+}
+
+/* ============================================================
+ * Batería de pruebas del catálogo de Marcas/Modelos/Versión.
+ * Lote C — sdd-apply task 7.1. Detrás de `DEBUG = true` para no
+ * ejecutarse en producción. Sólo modificable a mano en el editor.
+ * ============================================================ */
+
+const DEBUG = false;
+
+/**
+ * Suite de integración del catálogo. Cubre:
+ *  1. Idempotencia del seed (cargarCatalogoMarcasModelos ×2).
+ *  2. Auto-grow independiente (altaVehiculoInterno → catálogo + Vehiculos).
+ *  3. Migration aliases (vw → Volkswagen).
+ *  4. Cache hit/miss (2da lectura de listarMarcas).
+ *
+ * Devuelve {ok, tests_run, tests_passed, failures[]}.
+ */
+function probarCatalogoVehiculos() {
+  if (!DEBUG) {
+    Logger.log('SKIP: probarCatalogoVehiculos() requires DEBUG=true');
+    return { ok: false, skip: true, mensaje: 'Setear DEBUG = true en Codigo.gs' };
+  }
+
+  const testsRun = [];
+  const failures = [];
+
+  /* --- Test 1: Seed idempotencia ---------------------------- */
+  Logger.log('===== TEST 1: Seed idempotencia =====');
+  try {
+    const r1 = cargarCatalogoMarcasModelos();
+    Logger.log('Primera corrida: insertados=' + r1.insertados + ' ya_existentes=' + r1.ya_existentes);
+    const r2 = cargarCatalogoMarcasModelos();
+    Logger.log('Segunda corrida: insertados=' + r2.insertados + ' ya_existentes=' + r2.ya_existentes);
+    testsRun.push('seed_idempotency');
+    if (r2.insertados !== 0) {
+      failures.push('seed_idempotency: 2da corrida insertó ' + r2.insertados + ' (esperado 0)');
+    }
+  } catch (e) {
+    failures.push('seed_idempotency: excepción ' + e.message);
+  }
+
+  /* --- Test 2: Auto-grow independence ------------------------ */
+  Logger.log('===== TEST 2: Auto-grow independence =====');
+  try {
+    const ss = SpreadsheetApp.openById(obtenerSheetId());
+    const sheetV = ss.getSheetByName(SHEETS.VEHICULOS);
+    const sheetMM = ss.getSheetByName(SHEETS.MARCAS_MODELOS);
+    if (!sheetV || !sheetMM) {
+      Logger.log('WARN: Faltan hojas Vehiculos o Marcas_Modelos — skip test auto-grow');
+      failures.push('auto_grow: hojas faltantes');
+    } else {
+      const idCliente = 'C-TEST-' + Date.now();
+      const rAlta = altaVehiculoInterno({
+        patente: 'TEST001',
+        marca: 'Lamborghini',
+        modelo: 'Urus',
+        anio: '2024',
+        combustible: 'Nafta',
+        idCliente: idCliente,
+        version: 'Suv'
+      });
+      Logger.log('altaVehiculoInterno result: ' + JSON.stringify(rAlta));
+      testsRun.push('auto_grow');
+      if (!rAlta.ok) {
+        Logger.log('WARN: altaVehiculoInterno falló (idCliente puede no existir) — verificamos crecimiento del catálogo al menos');
+        const dataMM = sheetMM.getDataRange().getValues();
+        const found = dataMM.some(function (row) {
+          return String(row[1]).toLowerCase() === 'lamborghini' && String(row[2]).toLowerCase() === 'urus';
+        });
+        if (!found) {
+          failures.push('auto_grow: par Lamborghini/Urus no quedó en Marcas_Modelos');
+        }
+      }
+    }
+  } catch (e) {
+    failures.push('auto_grow: excepción ' + e.message);
+  }
+
+  /* --- Test 3: Migration aliases ---------------------------- */
+  Logger.log('===== TEST 3: Migration aliases (vw → Volkswagen) =====');
+  try {
+    const ss = SpreadsheetApp.openById(obtenerSheetId());
+    const sheetV = ss.getSheetByName(SHEETS.VEHICULOS);
+    const sheetMM = ss.getSheetByName(SHEETS.MARCAS_MODELOS);
+    if (sheetV && sheetMM) {
+      const dataV = sheetV.getDataRange().getValues();
+      let foundVw = false;
+      for (let i = 1; i < dataV.length; i++) {
+        const marcaOrig = String(dataV[i][5] || '').trim();
+        if (marcaOrig === 'vw' || marcaOrig === 'VW') { foundVw = true; break; }
+      }
+      if (!foundVw) {
+        Logger.log('No hay fila con Marca=vw/VW en Vehiculos — no se puede probar alias in-situ');
+        Logger.log('WARN: Test 3 no concluyente (sin fila de prueba vw)');
+        failures.push('migration_aliases: sin fila de prueba');
+      } else {
+        const rMig = migrarMarcasExistentes();
+        Logger.log('migrarMarcasExistentes: ' + JSON.stringify(rMig));
+        const dataMM = sheetMM.getDataRange().getValues();
+        const hasVwNormalized = dataMM.some(function (row) {
+          return String(row[1]).toLowerCase() === 'volkswagen';
+        });
+        testsRun.push('migration_aliases');
+        if (!hasVwNormalized) {
+          failures.push('migration_aliases: Volkswagen no quedó en Marcas_Modelos tras migrar vw');
+        }
+      }
+    }
+  } catch (e) {
+    failures.push('migration_aliases: excepción ' + e.message);
+  }
+
+  /* --- Test 4: Cache hit ------------------------------------- */
+  Logger.log('===== TEST 4: Cache hit =====');
+  try {
+    CacheService.getScriptCache().remove('catalogoVehiculos_v1');
+    Logger.log('Cache invalidada manualmente antes del test');
+    const t0 = Date.now();
+    const m1 = listarMarcas();
+    const dt1 = Date.now() - t0;
+    Logger.log('1ra lectura (cache MISS esperado): ' + m1.length + ' marcas, ' + dt1 + ' ms');
+    const t1 = Date.now();
+    const m2 = listarMarcas();
+    const dt2 = Date.now() - t1;
+    Logger.log('2da lectura (cache HIT esperado per spec R5): ' + m2.length + ' marcas, ' + dt2 + ' ms');
+    testsRun.push('cache_hit');
+    if (dt2 > dt1 - 50) {
+      failures.push('cache_hit: cache hit no mas rapido que miss: dt1=' + dt1 + 'ms dt2=' + dt2 + 'ms');
+    }
+  } catch (e) {
+    failures.push('cache_hit: excepción ' + e.message);
+  }
+
+  const testsPassed = testsRun.length - failures.length;
+  Logger.log('===== RESUMEN =====');
+  Logger.log('tests_run=' + testsRun.length + ' tests_passed=' + testsPassed + ' failures=' + failures.length);
+  if (failures.length) {
+    Logger.log('FAILURES: ' + JSON.stringify(failures));
+  }
+
+  return {
+    ok: failures.length === 0,
+    tests_run: testsRun.length,
+    tests_passed: testsPassed,
+    failures: failures
   };
 }

@@ -1850,16 +1850,43 @@
           <div class="card-title">Paso 2 · Datos del vehículo</div>
           <label>Patente *</label>
           <input type="text" id="veh-patente" placeholder="AB123CD" style="text-transform: uppercase;">
-          <div class="row">
-            <div>
-              <label>Marca *</label>
-              <input type="text" id="veh-marca" placeholder="Toyota">
+          <div id="veh-catalog-wrap">
+            <div class="row">
+              <div>
+                <label>Marca *</label>
+                <select id="veh-marca" disabled>
+                  <option value="">Seleccioná marca...</option>
+                </select>
+              </div>
+              <div>
+                <label>Modelo *</label>
+                <select id="veh-modelo" disabled>
+                  <option value="">Seleccioná marca...</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label>Modelo *</label>
-              <input type="text" id="veh-modelo" placeholder="Etios">
-            </div>
+            <label>Versión</label>
+            <select id="veh-versión" disabled style="display:none;">
+              <option value="">Seleccioná modelo...</option>
+            </select>
+            <input type="text" id="veh-version-libre-visible" placeholder="Versión (opcional)" style="display:none;">
           </div>
+          <div id="veh-libre-wrap" style="display:none;">
+            <div class="row">
+              <div>
+                <label>Marca *</label>
+                <input type="text" id="veh-marca-libre" placeholder="Toyota">
+              </div>
+              <div>
+                <label>Modelo *</label>
+                <input type="text" id="veh-modelo-libre" placeholder="Etios">
+              </div>
+            </div>
+            <label>Versión</label>
+            <input type="text" id="veh-version-libre" placeholder="XLI">
+          </div>
+          <a href="#" id="veh-escape-link" style="display:inline-block; margin:8px 0 12px; font-size:13px; color:var(--primary); text-decoration:none;">+ No encuentro mi marca/modelo</a>
+          <a href="#" id="veh-usar-catalogo-link" style="display:none; margin:8px 0 12px; font-size:13px; color:var(--primary); text-decoration:none;">← Usar catálogo</a>
           <label>Año</label>
           <input type="number" id="veh-anio" placeholder="2020" min="1950" max="2030">
           <label>Combustible</label>
@@ -2685,8 +2712,26 @@
     document.getElementById('btnCrearVehiculo').addEventListener('click', async function () {
       if (!state.clienteId) { mostrarToast('Seleccioná o creá un cliente primero', 'warning'); return; }
       const patente = document.getElementById('veh-patente').value.trim().toUpperCase();
-      const marca = document.getElementById('veh-marca').value.trim();
-      const modelo = document.getElementById('veh-modelo').value.trim();
+      const catalogoActivo = document.getElementById('veh-catalog-wrap').style.display !== 'none';
+      const marcaInputId = catalogoActivo ? 'veh-marca' : 'veh-marca-libre';
+      const modeloInputId = catalogoActivo ? 'veh-modelo' : 'veh-modelo-libre';
+      let versionValue = '';
+      if (catalogoActivo) {
+        const selVer = document.getElementById('veh-versión');
+        const txtVer = document.getElementById('veh-version-libre-visible');
+        if (selVer && selVer.style.display !== 'none' && selVer.value) {
+          versionValue = selVer.value;
+        } else if (txtVer && txtVer.style.display !== 'none' && txtVer.value) {
+          versionValue = txtVer.value.trim();
+        } else {
+          versionValue = '';
+        }
+      } else {
+        versionValue = (document.getElementById('veh-version-libre').value || '').trim();
+      }
+      const marca = normalizarMarcaModelo(document.getElementById(marcaInputId).value.trim());
+      const modelo = normalizarMarcaModelo(document.getElementById(modeloInputId).value.trim());
+      const version = normalizarMarcaModelo(versionValue);
       if (!patente || !marca || !modelo) {
         mostrarToast('Patente, marca y modelo son obligatorios', 'warning');
         return;
@@ -2696,6 +2741,7 @@
         patente: patente,
         marca: marca,
         modelo: modelo,
+        version: version,
         anio: document.getElementById('veh-anio').value,
         combustible: document.getElementById('veh-combustible').value
       };
@@ -4167,6 +4213,242 @@
         img.onerror = function () { img.style.display = 'none'; placeholder.style.display = ''; };
         img.src = LOGO_URL;
       });
+    })();
+
+    /* ============================================================
+     * Catálogo curado Marcas / Modelos / Versión (Lote C — sdd-apply)
+     * A1/A2/A3/A4/A6/A7 del spec `admin/ui-catalog`.
+     * Patrón: `google.script.run.withSuccessHandler(cb).listarXxx(...)`
+     * directo sobre las funciones backend del catálogo (Lote B).
+     * Cache miss en backend hace rebuild transparente — la patente
+     * del usuario NO se borra porque sólo repoblamos los selects.
+     * ============================================================ */
+
+    /* Q2: duplicada — si modificás el backend, actualizá acá */
+    const ALIASES_MARCA_VEH = {
+      'vw': 'Volkswagen',
+      'chevro': 'Chevrolet',
+      'chevr': 'Chevrolet',
+      'merced': 'Mercedes-Benz',
+      'bmw': 'BMW',
+      'citroen': 'Citroën',
+      'mb': 'Mercedes-Benz'
+    };
+
+    /* Q2: duplicada — si modificás el backend, actualizá acá */
+    function normalizarMarcaModelo(s) {
+      if (s === null || s === undefined) return '';
+      const trimmed = String(s).trim().replace(/\s+/g, ' ');
+      if (!trimmed) return '';
+      const titled = trimmed.split(' ').map(function (w) {
+        if (!w) return w;
+        return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+      }).join(' ');
+      const lowerKey = titled.toLowerCase().split(' ')[0];
+      if (Object.prototype.hasOwnProperty.call(ALIASES_MARCA_VEH, lowerKey)) {
+        const canonical = ALIASES_MARCA_VEH[lowerKey];
+        return titled.replace(/^\S+/, canonical);
+      }
+      return titled;
+    }
+
+    /* Picks previos del catálogo para round-trip del escape-hatch (A3). */
+    const vehCatalogPicks = { marca: '', modelo: '', version: '' };
+
+    function _vehResetSelect_(selId, placeholder, disabled) {
+      const sel = document.getElementById(selId);
+      if (!sel) return;
+      sel.innerHTML = '';
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = placeholder;
+      sel.appendChild(opt);
+      sel.disabled = !!disabled;
+    }
+
+    function _vehPoblarSelect_(selId, valores, placeholder) {
+      const sel = document.getElementById(selId);
+      if (!sel) return;
+      sel.innerHTML = '';
+      const opt0 = document.createElement('option');
+      opt0.value = '';
+      opt0.textContent = placeholder;
+      sel.appendChild(opt0);
+      (valores || []).forEach(function (v) {
+        const o = document.createElement('option');
+        o.value = v;
+        o.textContent = v;
+        sel.appendChild(o);
+      });
+    }
+
+    function _vehCallBackendListar_(fnName, args, onOk) {
+      if (typeof google === 'undefined' || !google.script || !google.script.run) {
+        mostrarToast('Sin conexión al backend', 'error');
+        return;
+      }
+      const runner = google.script.run.withSuccessHandler(onOk).withFailureHandler(function (err) {
+        mostrarToast('Error leyendo catálogo: ' + (err && err.message ? err.message : err), 'error');
+      });
+      runner[fnName].apply(runner, args);
+    }
+
+    /* A1: primer render de #paso-vehiculo puebla veh-marca. */
+    function cargarMarcasVehiculo() {
+      const sel = document.getElementById('veh-marca');
+      if (!sel) return;
+      sel.disabled = true;
+      sel.innerHTML = '<option value="">Cargando marcas...</option>';
+      _vehCallBackendListar_('listarMarcas', [], function (marcas) {
+        _vehPoblarSelect_('veh-marca', marcas || [], 'Seleccioná marca...');
+        document.getElementById('veh-marca').disabled = false;
+        _vehResetSelect_('veh-modelo', 'Seleccioná marca...', true);
+        _vehResetSelect_('veh-versión', 'Seleccioná modelo...', true);
+        const txtVer = document.getElementById('veh-version-libre-visible');
+        if (txtVer) { txtVer.value = ''; txtVer.style.display = 'none'; }
+      });
+    }
+
+    /* A2: cambio de marca → repoblar veh-modelo, reset veh-versión. */
+    function cargarModelosVehiculo(marca) {
+      if (!marca) {
+        _vehResetSelect_('veh-modelo', 'Seleccioná marca...', true);
+        _vehResetSelect_('veh-versión', 'Seleccioná modelo...', true);
+        return;
+      }
+      const sel = document.getElementById('veh-modelo');
+      sel.disabled = true;
+      sel.innerHTML = '<option value="">Cargando modelos...</option>';
+      _vehResetSelect_('veh-versión', 'Seleccioná modelo...', true);
+      const txtVer = document.getElementById('veh-version-libre-visible');
+      if (txtVer) { txtVer.value = ''; txtVer.style.display = 'none'; }
+      _vehCallBackendListar_('listarModelos', [marca], function (modelos) {
+        _vehPoblarSelect_('veh-modelo', modelos || [], 'Seleccioná modelo...');
+        document.getElementById('veh-modelo').disabled = !(modelos && modelos.length);
+      });
+    }
+
+    /* A2 + R6: si [] → reveal free-text Versión. */
+    function cargarVersionesVehiculo(marca, modelo) {
+      if (!marca || !modelo) {
+        _vehResetSelect_('veh-versión', 'Seleccioná modelo...', true);
+        const txtVer = document.getElementById('veh-version-libre-visible');
+        if (txtVer) { txtVer.value = ''; txtVer.style.display = 'none'; }
+        return;
+      }
+      const sel = document.getElementById('veh-versión');
+      const txtVer = document.getElementById('veh-version-libre-visible');
+      sel.disabled = true;
+      sel.innerHTML = '<option value="">Cargando versiones...</option>';
+      if (txtVer) { txtVer.value = ''; txtVer.style.display = 'none'; }
+      _vehCallBackendListar_('listarVersiones', [marca, modelo], function (versiones) {
+        if (versiones && versiones.length) {
+          _vehPoblarSelect_('veh-versión', versiones, 'Seleccioná versión...');
+          sel.disabled = false;
+          sel.style.display = '';
+          if (txtVer) txtVer.style.display = 'none';
+        } else {
+          sel.style.display = 'none';
+          if (txtVer) {
+            txtVer.style.display = '';
+            txtVer.disabled = false;
+            txtVer.value = '';
+          }
+        }
+      });
+    }
+
+    /* A3: oculta selects, muestra inputs libres pre-llenados. */
+    function escapeHatchActivar() {
+      const patente = document.getElementById('veh-patente').value;
+      const selMarca = document.getElementById('veh-marca');
+      const selModelo = document.getElementById('veh-modelo');
+      const selVer = document.getElementById('veh-versión');
+      const txtVerVisible = document.getElementById('veh-version-libre-visible');
+      vehCatalogPicks.marca = selMarca ? (selMarca.value || (selMarca.options[selMarca.selectedIndex] && selMarca.options[selMarca.selectedIndex].text) || '') : '';
+      vehCatalogPicks.modelo = selModelo ? selModelo.value : '';
+      vehCatalogPicks.version = (selVer && selVer.style.display !== 'none') ? selVer.value : (txtVerVisible ? txtVerVisible.value : '');
+      document.getElementById('veh-catalog-wrap').style.display = 'none';
+      document.getElementById('veh-libre-wrap').style.display = '';
+      document.getElementById('veh-escape-link').style.display = 'none';
+      document.getElementById('veh-usar-catalogo-link').style.display = 'inline-block';
+      document.getElementById('veh-marca-libre').value = vehCatalogPicks.marca || '';
+      document.getElementById('veh-modelo-libre').value = vehCatalogPicks.modelo || '';
+      document.getElementById('veh-version-libre').value = vehCatalogPicks.version || '';
+      document.getElementById('veh-patente').value = patente;
+    }
+
+    /* A3 reverse: restaura selects con los picks previos. */
+    function escapeHatchRestaurar() {
+      const patente = document.getElementById('veh-patente').value;
+      document.getElementById('veh-catalog-wrap').style.display = '';
+      document.getElementById('veh-libre-wrap').style.display = 'none';
+      document.getElementById('veh-escape-link').style.display = 'inline-block';
+      document.getElementById('veh-usar-catalogo-link').style.display = 'none';
+      const selMarca = document.getElementById('veh-marca');
+      if (selMarca && vehCatalogPicks.marca) {
+        const opt = Array.from(selMarca.options).find(function (o) { return o.value === vehCatalogPicks.marca || o.text === vehCatalogPicks.marca; });
+        if (opt) selMarca.value = opt.value;
+      }
+      if (vehCatalogPicks.marca) {
+        cargarModelosVehiculo(vehCatalogPicks.marca);
+        const selModelo = document.getElementById('veh-modelo');
+        if (selModelo && vehCatalogPicks.modelo) {
+          selModelo.value = vehCatalogPicks.modelo;
+          cargarVersionesVehiculo(vehCatalogPicks.marca, vehCatalogPicks.modelo);
+        }
+      }
+      document.getElementById('veh-patente').value = patente;
+    }
+
+    /* Wire una sola vez: change handlers + escape-hatch links. */
+    function initVehiculoCatalog() {
+      const selMarca = document.getElementById('veh-marca');
+      const selModelo = document.getElementById('veh-modelo');
+      const escapeLink = document.getElementById('veh-escape-link');
+      const usarLink = document.getElementById('veh-usar-catalogo-link');
+      if (selMarca && !selMarca._vehWired) {
+        selMarca._vehWired = true;
+        selMarca.addEventListener('change', function () {
+          const m = selMarca.value;
+          cargarModelosVehiculo(m);
+        });
+      }
+      if (selModelo && !selModelo._vehWired) {
+        selModelo._vehWired = true;
+        selModelo.addEventListener('change', function () {
+          const m = selMarca ? selMarca.value : '';
+          const mo = selModelo.value;
+          cargarVersionesVehiculo(m, mo);
+        });
+      }
+      if (escapeLink && !escapeLink._vehWired) {
+        escapeLink._vehWired = true;
+        escapeLink.addEventListener('click', function (e) {
+          e.preventDefault();
+          escapeHatchActivar();
+        });
+      }
+      if (usarLink && !usarLink._vehWired) {
+        usarLink._vehWired = true;
+        usarLink.addEventListener('click', function (e) {
+          e.preventDefault();
+          escapeHatchRestaurar();
+        });
+      }
+    }
+
+    /* Hook al wizard step 2 (entrar a #paso-vehiculo). */
+    (function hookVehiculoCatalogInit() {
+      const original = window.setWizardStep;
+      if (typeof original !== 'function') return;
+      window.setWizardStep = function (n) {
+        original(n);
+        if (n === 2) {
+          initVehiculoCatalog();
+          cargarMarcasVehiculo();
+        }
+      };
     })();
 
     dbg.init();

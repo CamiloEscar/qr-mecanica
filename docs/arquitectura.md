@@ -66,7 +66,37 @@ Si en el futuro se necesita un CSPRNG (por ejemplo, para tokens con poder de rev
 
 ## Modelo de datos
 
-Cinco hojas en un único Google Sheet:
+Cinco hojas en un único Google Sheet — más dos hojas de catálogo curado que respaldan el dropdown de Marca/Modelo/Versión en `AdminPage.html`:
+
+| Hoja                | Propósito                                                            |
+|---------------------|----------------------------------------------------------------------|
+| `Clientes`          | Datos del dueño (entidad débil)                                      |
+| `Vehiculos`         | Entidad central: vehículo + FK lógica a cliente                      |
+| `Servicios`         | Hechos: cada service es una fila                                     |
+| `AccesosLog`        | Auditoría (sólo últimos 4 chars del token)                           |
+| `Turnos`            | Agenda de servicios programados                                      |
+| `Marcas_Modelos`    | Catalog (seed + user + migration entries) — backing dropdown para alta de vehículo |
+| `Modelos_Versiones` | Curated versión list por (Marca, Modelo) — popula el tercer `<select>` |
+
+### Catalog: aliases y normalización
+
+El catálogo de Marcas/Modelos/Versión está respaldado por dos hojas (`Marcas_Modelos` y `Modelos_Versiones`) y se sirve a `AdminPage.html` a través de 3 selects en cascada en `#paso-vehiculo`. El cache vive en `CacheService.getScriptCache()` bajo una sola key `catalogoVehiculos_v1` con la forma `{ts, marcas, modelosPorMarca, versionesPorModelo}`. TTL de **6 horas (21600 s)** — bounded por el límite de 100 KB por entry de Apps Script; con el seed argentino (~80 marcas) el árbol estimado es 30-50 KB. En cada `registrarMarcaModelo()` exitoso se hace `cache.remove('catalogoVehiculos_v1')` (invalidación total — el upsert es raro, la simplicidad gana).
+
+**Pipeline de normalización** (orden estricto): `trim` → collapse whitespace → Title Case → alias map sobre la primera palabra. La función pura `normalizarMarcaModelo(s)` vive duplicada en `Codigo.gs:2277` (canonical de backend, R2) y en `AdminPage.html` (pre-submit, A7) — están comentadas `Q2: duplicada` para mantenerlas sincronizadas.
+
+**Aliases cubiertos**:
+
+| Entrada  | Canónico       |
+|----------|----------------|
+| `vw`     | Volkswagen     |
+| `chevro` | Chevrolet      |
+| `chevr`  | Chevrolet      |
+| `merced` | Mercedes-Benz  |
+| `bmw`    | BMW            |
+| `citroen`| Citroën        |
+| `mb`     | Mercedes-Benz  |
+
+**Auto-grow + rollback**: cada `altaVehiculo` y `altaVehiculoInterno` dispara `_autoGrowCatalogo_(marca, modelo, version)` que intenta `registrarMarcaModelo({origen: 'user'})` en `try/catch` independiente (R4). Una falla del catálogo NO bloquea el alta del vehículo — sólo loguea. La siembra inicial se hace vía menú **Catálogo → Cargar catálogo…** en el editor de Sheets (`cargarCatalogoMarcasModelos()`, ≥80 marcas + versiones curadas para Hilux/Etios/Ranger/Corolla/Focus/Cronos). La migración legacy aplica normalización + aliases con `Origen='migration'` vía menú **Catálogo → Migrar marcas…**. El rollback completo (eliminar hojas + invalidar cache) está en **Catálogo → Eliminar catálogo** (`eliminarHojasCatalogo()`).
 
 ### `Clientes` (entidad débil: solo para tener el nombre del dueño)
 
