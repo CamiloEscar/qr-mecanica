@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><?= vehiculo.Marca ?> <?= vehiculo.Modelo ?></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&display=swap">
+  <style>
+    :root {
+      --negro: #0a0a0a;
+      --negro-soft: #141414;
+      --negro-card: #1a1a1a;
+      --negro-border: #2a2a2a;
+      --rojo: #dc2626;
+      --rojo-hover: #ef4444;
+      --rojo-glow: rgba(220, 38, 38, 0.4);
+      --texto: #f5f5f5;
+      --texto-muted: #a3a3a3;
+      --texto-dim: #525252;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --error: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--negro);
+      color: var(--texto);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      position: relative;
+      min-height: 100vh;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 1;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent 0%, var(--rojo) 50%, transparent 100%);
+      z-index: 9999;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 16px;
+      position: relative;
+      z-index: 2;
+    }
+    .header {
+      background: linear-gradient(135deg, var(--negro-soft) 0%, var(--negro-card) 100%);
+      color: var(--texto);
+      padding: 22px 20px;
+      border-radius: 14px;
+      margin-bottom: 16px;
+      border: 1px solid var(--negro-border);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent 0%, var(--rojo) 50%, transparent 100%);
+    }
+    .header h1 {
+      margin: 8px 0 4px;
+      font-family: 'Oswald', sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      line-height: 1.1;
+    }
+    .header .meta {
+      font-size: 13px;
+      color: var(--texto-muted);
+      letter-spacing: 0.03em;
+    }
+    .header .meta strong {
+      color: var(--rojo);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 11px;
+      margin-right: 4px;
+    }
+    .alert {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-left: 4px solid var(--warning);
+      color: #fbbf24;
+      padding: 14px 16px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+    .alert-title {
+      font-weight: 700;
+      margin-bottom: 4px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--warning);
+    }
+    .card {
+      background: var(--negro-card);
+      border: 1px solid var(--negro-border);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: rgba(220, 38, 38, 0.25); }
+    .card-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--rojo);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 14px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: var(--texto-muted);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+    .stat-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--texto);
+    }
+    .timeline {
+      position: relative;
+      padding-left: 28px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: var(--negro-border);
+    }
+    .timeline-item {
+      position: relative;
+      padding-bottom: 24px;
+    }
+    .timeline-item:last-child { padding-bottom: 0; }
+    .timeline-dot {
+      position: absolute;
+      left: -24px;
+      top: 6px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--rojo);
+      border: 3px solid var(--negro-card);
+      box-shadow: 0 0 0 2px var(--rojo), 0 0 12px rgba(220, 38, 38, 0.5);
+    }
+    .timeline-date {
+      font-size: 11px;
+      color: var(--rojo);
+      margin-bottom: 6px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .timeline-desc {
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 15px;
+      color: var(--texto);
+    }
+    .timeline-detail {
+      font-size: 14px;
+      color: var(--texto-muted);
+      margin-bottom: 6px;
+    }
+    .timeline-detail strong {
+      color: var(--texto);
+      font-weight: 600;
+    }
+    .timeline-photos {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .timeline-photos a {
+      display: block;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--negro-border);
+      transition: transform 0.15s ease, border-color 0.15s;
+    }
+    .timeline-photos a:hover {
+      transform: scale(1.05);
+      border-color: var(--rojo);
+    }
+    .timeline-photos img {
+      display: block;
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+    }
+    .empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--texto-muted);
+    }
+    .empty-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+      opacity: 0.4;
+      color: var(--rojo);
+    }
+    .footer {
+      text-align: center;
+      padding: 24px 18px 22px;
+      color: var(--texto-muted);
+      font-size: 13px;
+      margin-top: 12px;
+      background: var(--negro-card);
+      border: 1px solid var(--negro-border);
+      border-radius: 14px;
+    }
+    .taller-brand {
+      display: flex; align-items: center; justify-content: center;
+      gap: 12px;
+      padding-bottom: 14px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--negro-border);
+    }
+    .taller-brand-text { display: flex; flex-direction: column; min-width: 0; }
+    .taller-brand-text .taller-nombre-inline {
+      font-family: 'Oswald', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--texto);
+      line-height: 1.1;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .logo-taller-img { display: none; max-height: 40px; max-width: 110px; height: auto; }
+    .logo-placeholder {
+      width: 100px; height: 40px;
+      background: var(--negro-soft);
+      border: 2px dashed var(--rojo);
+      border-radius: 8px;
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 4px;
+      color: var(--rojo); font-weight: 700; font-size: 11px;
+      letter-spacing: 1.5px;
+      flex-shrink: 0;
+    }
+    .logo-placeholder svg { opacity: 0.85; }
+    .footer-brand {
+      display: flex; align-items: center; gap: 14px;
+      max-width: 480px; margin: 0 auto 18px;
+    }
+    .footer-logo .logo-taller-img { max-height: 56px; max-width: 130px; }
+    .footer-logo .logo-placeholder {
+      width: 130px; height: 56px;
+      background: var(--negro-soft);
+      border: 2px dashed var(--rojo);
+      color: var(--rojo);
+      font-size: 13px;
+      letter-spacing: 2px;
+    }
+    .footer-info { flex: 1; min-width: 0; text-align: left; }
+    .footer-taller-nombre {
+      font-family: 'Oswald', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--texto);
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .footer-taller-sub {
+      font-size: 10px;
+      color: var(--rojo);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+    .footer-contact {
+      display: flex; flex-direction: column; gap: 10px; align-items: center;
+      max-width: 480px; margin: 0 auto 16px;
+    }
+    .footer-wa-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px;
+      background: var(--rojo);
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 15px;
+      font-weight: 700;
+      padding: 14px 28px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      width: 100%;
+      max-width: 320px;
+      transition: all 0.2s;
+      box-shadow: 0 0 0 0 var(--rojo-glow);
+    }
+    .footer-wa-btn:hover {
+      background: var(--rojo-hover);
+      box-shadow: 0 0 24px 4px var(--rojo-glow);
+      transform: translateY(-1px);
+    }
+    .footer-ig-link {
+      color: var(--texto-muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex; align-items: center; gap: 6px;
+      transition: color 0.2s;
+    }
+    .footer-ig-link:hover { color: var(--rojo); }
+    .footer-meta {
+      font-size: 11px;
+      color: var(--texto-dim);
+      padding-top: 14px;
+      border-top: 1px solid var(--negro-border);
+      letter-spacing: 0.04em;
+    }
+    @media (max-width: 480px) {
+      .grid-2 { grid-template-columns: 1fr; gap: 12px; }
+      .header h1 { font-size: 22px; }
+      .container { padding: 12px; }
+      .taller-brand { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="taller-brand">
+        <img id="logoTallerHeader" class="logo-taller-img" alt="Logo del taller">
+        <div id="logoPlaceholderHeader" class="logo-placeholder">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>
+          <span>LOGO</span>
+        </div>
+        <div class="taller-brand-text">
+          <div class="taller-nombre-inline">Mecánica Martínez</div>
+        </div>
+      </div>
+      <h1><?= vehiculo.Marca ?> <?= vehiculo.Modelo ?></h1>
+      <div class="meta"><? if (vehiculo.Anio) { ?><strong>Año</strong> <?= vehiculo.Anio ?><? } ?></div>
+    </div>
+
+    <? if (ultimo && ultimo.Proximo_Mantenimiento) { ?>
+      <div class="alert">
+        <div class="alert-title">Próximo mantenimiento</div>
+        <div><?= ultimo.Proximo_Mantenimiento ?></div>
+      </div>
+    <? } ?>
+
+    <? if (ultimo) { ?>
+      <div class="card">
+        <div class="card-title">Última visita</div>
+        <div class="grid-2">
+          <div>
+            <div class="stat-label">Fecha</div>
+            <div class="stat-value"><?= ultimo.Fecha ?></div>
+          </div>
+          <div>
+            <div class="stat-label">Kilometraje</div>
+            <div class="stat-value"><?= ultimo.Kilometraje ? (ultimo.Kilometraje + ' km') : '—' ?></div>
+          </div>
+        </div>
+      </div>
+    <? } ?>
+
+    <div class="card">
+      <div class="card-title">Historial completo</div>
+      <? if (servicios.length === 0) { ?>
+        <div class="empty">
+          <div class="empty-icon">—</div>
+          <div>Aún no hay servicios registrados para este vehículo.</div>
+        </div>
+      <? } else { ?>
+        <div class="timeline">
+          <? servicios.forEach(function(s) { ?>
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-date"><?= s.Fecha ?></div>
+              <div class="timeline-desc"><?= s.Descripcion ?></div>
+              <? if (s.Repuestos) { ?>
+                <div class="timeline-detail"><strong>Repuestos:</strong> <?= s.Repuestos ?></div>
+              <? } ?>
+              <? if (s.Observaciones) { ?>
+                <div class="timeline-detail"><strong>Observaciones:</strong> <?= s.Observaciones ?></div>
+              <? } ?>
+              <? if (s.Kilometraje) { ?>
+                <div class="timeline-detail"><strong>Kilometraje:</strong> <?= s.Kilometraje ?> km</div>
+              <? } ?>
+              <? if (s.Fotos_IDs) { ?>
+                <div class="timeline-photos">
+                  <? s.Fotos_IDs.split(',').forEach(function(idFoto) {
+                       const fid = String(idFoto).trim();
+                       if (fid) { ?>
+                    <a href="https://drive.google.com/file/d/<?= fid ?>/view" target="_blank" rel="noopener noreferrer">
+                      <img src="https://drive.google.com/thumbnail?id=<?= fid ?>&sz=w200" alt="Foto del servicio" loading="lazy">
+                    </a>
+                  <?   }
+                     }); ?>
+                </div>
+              <? } ?>
+            </div>
+          <? }); ?>
+        </div>
+      <? } ?>
+    </div>
+
+    <div class="footer">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <img id="logoTallerFooter" class="logo-taller-img" alt="Logo del taller">
+          <div id="logoPlaceholderFooter" class="logo-placeholder">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>
+            <span>LOGO</span>
+          </div>
+        </div>
+        <div class="footer-info">
+          <div class="footer-taller-nombre">Mecánica Martínez</div>
+          <div class="footer-taller-sub">Servicio Automotriz</div>
+        </div>
+      </div>
+      <div class="footer-contact">
+        <a class="footer-wa-btn" href="https://wa.me/5493442625581" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56-.35-.12-.74-.03-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3.24 3 3 3.99 3 13.28 10.73 21 19.99 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.97-.99z"/></svg>
+          Escribinos por WhatsApp
+        </a>
+        <a class="footer-ig-link" href="https://www.instagram.com/martinez_mecanicaautomotriz/" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.81.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.81-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.81-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.81.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16M12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.31-1.46.72-2.13 1.39C1.34 2.69.93 3.36.62 4.15.32 4.91.12 5.79.06 7.06.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.05 1.27.25 2.15.55 2.91.31.79.72 1.46 1.39 2.13.67.67 1.34 1.08 2.13 1.39.76.3 1.64.5 2.91.55C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c1.27-.05 2.15-.25 2.91-.55.79-.31 1.46-.72 2.13-1.39.67-.67 1.08-1.34 1.39-2.13.3-.76.5-1.64.55-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.05-1.27-.25-2.15-.55-2.91-.31-.79-.72-1.46-1.39-2.13C21.31 1.34 20.64.93 19.85.62 19.09.32 18.21.12 16.94.06 15.67.01 15.26 0 12 0zm0 5.84A6.16 6.16 0 0 0 5.84 12 6.16 6.16 0 0 0 12 18.16 6.16 6.16 0 0 0 18.16 12 6.16 6.16 0 0 0 12 5.84zm0 10.16A4 4 0 1 1 12 8a4 4 0 0 1 0 8zm6.4-11.85a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88z"/></svg>
+          @martinez_mecanicaautomotriz
+        </a>
+      </div>
+      <div class="footer-meta">Datos protegidos · Acceso de solo lectura</div>
+    </div>
+  </div>
+  <script>
+    const TALLER_NOMBRE = 'Mecánica Martínez';
+    const TALLER_INSTAGRAM = 'https://www.instagram.com/martinez_mecanicaautomotriz/';
+    const TALLER_INSTAGRAM_HANDLE = '@martinez_mecanicaautomotriz';
+    const TALLER_TELEFONO = '3442-625581';
+    const TALLER_TELEFONO_WA = '5493442625581';
+    const LOGO_URL = 'https://lh3.googleusercontent.com/d/1WDYg8rkNyRedO_ZINDX35eQyWNQdQ5yW';
+
+    (function initLogos() {
+      if (!LOGO_URL || LOGO_URL === 'PLACEHOLDER_LOGO_URL') return;
+      const slots = [
+        { img: 'logoTallerHeader', placeholder: 'logoPlaceholderHeader' },
+        { img: 'logoTallerFooter', placeholder: 'logoPlaceholderFooter' }
+      ];
+      slots.forEach(function (s) {
+        const img = document.getElementById(s.img);
+        const placeholder = document.getElementById(s.placeholder);
+        if (!img || !placeholder) return;
+        img.onload = function () { img.style.display = 'block'; placeholder.style.display = 'none'; };
+        img.onerror = function () { img.style.display = 'none'; placeholder.style.display = ''; };
+        img.src = LOGO_URL;
+      });
+    })();
+  </script>
+</body>
+</html>

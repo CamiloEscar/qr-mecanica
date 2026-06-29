@@ -1,0 +1,2302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel del Taller</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&display=swap">
+  <style>
+    :root {
+      --negro: #0a0a0a;
+      --negro-soft: #141414;
+      --negro-card: #1a1a1a;
+      --negro-border: #2a2a2a;
+      --rojo: #dc2626;
+      --rojo-hover: #ef4444;
+      --rojo-glow: rgba(220, 38, 38, 0.4);
+      --texto: #f5f5f5;
+      --texto-muted: #a3a3a3;
+      --texto-dim: #525252;
+      --primary: #dc2626;
+      --primary-dark: #b91c1c;
+      --primary-light: rgba(220, 38, 38, 0.15);
+      --primary-50: rgba(220, 38, 38, 0.08);
+      --bg: #0a0a0a;
+      --surface: #1a1a1a;
+      --text: #f5f5f5;
+      --text-muted: #a3a3a3;
+      --text-light: #525252;
+      --border: #2a2a2a;
+      --border-strong: #3a3a3a;
+      --success: #10b981;
+      --success-light: rgba(16, 185, 129, 0.15);
+      --success-dark: #6ee7b7;
+      --danger: #ef4444;
+      --danger-light: rgba(239, 68, 68, 0.15);
+      --danger-dark: #fca5a5;
+      --warning: #f59e0b;
+      --warning-light: rgba(245, 158, 11, 0.15);
+      --warning-dark: #fbbf24;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.5);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --radius-lg: 24px;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      padding-bottom: 88px;
+      min-height: 100vh;
+      position: relative;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 1;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent 0%, var(--rojo) 50%, transparent 100%);
+      z-index: 9999;
+    }
+
+    .sidebar {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: 240px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      flex-direction: column;
+      padding: 16px 12px;
+      z-index: 50;
+    }
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 12px 16px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .sidebar-brand-icon {
+      width: 36px; height: 36px;
+      background: var(--primary);
+      color: white;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 700;
+    }
+    .sidebar-brand-text {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text);
+    }
+    .sidebar-brand-text small {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+    .sidebar nav {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: transparent;
+      border: none;
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav-item:hover { background: var(--primary-50); color: var(--primary); }
+    .nav-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+    .nav-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px; height: 24px;
+      font-size: 18px;
+    }
+    .sidebar-footer {
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+    }
+    .sidebar-footer .btn-logout {
+      width: 100%;
+      background: var(--bg);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .sidebar-footer .btn-logout:hover { background: var(--danger-light); color: var(--danger-dark); border-color: var(--danger); }
+
+    .app {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 12px;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: #ffffff;
+      padding: 18px 22px;
+      border-radius: var(--radius);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3), 0 0 30px rgba(220, 38, 38, 0.1);
+    }
+    .header h1 {
+      margin: 0;
+      font-family: 'Oswald', sans-serif;
+      font-size: 19px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .header .subtitle {
+      font-size: 12px;
+      opacity: 0.9;
+      margin-top: 2px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+    .btn-logout-mobile {
+      background: rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.32);
+      padding: 8px 14px;
+      border-radius: var(--radius-lg);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .btn-logout-mobile:hover { background: rgba(255, 255, 255, 0.28); }
+
+    .section { display: none; animation: fadeIn 0.2s ease-out; }
+    .section.active { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+    .card-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 14px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 14px;
+      text-align: left;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .stat:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--primary);
+      line-height: 1.1;
+      letter-spacing: -0.5px;
+    }
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 6px;
+      font-weight: 600;
+    }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .quick-action {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 16px 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .quick-action:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+    .quick-action .qa-icon {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--primary-light);
+      color: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+
+    .recent-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .recent-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .recent-item:first-child { padding-top: 0; }
+    .recent-icon {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--success-light);
+      color: var(--success-dark);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .recent-body { flex: 1; min-width: 0; }
+    .recent-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .recent-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .input, input[type="text"], input[type="number"], input[type="date"], input[type="email"], input[type="tel"], textarea, select {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 15px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      font-family: inherit;
+      color: var(--text);
+      margin-bottom: 14px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.12);
+    }
+    input::placeholder, textarea::placeholder { color: var(--text-light); }
+    input:disabled, textarea:disabled, select:disabled { background: var(--bg); color: var(--text-muted); cursor: not-allowed; }
+    textarea { resize: vertical; min-height: 80px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      border-radius: var(--radius-lg);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s, transform 0.1s;
+      min-height: 44px;
+    }
+    .btn:hover:not(:disabled) { background: var(--primary-dark); }
+    .btn:active:not(:disabled) { transform: scale(0.98); }
+    .btn:disabled { background: var(--text-light); cursor: not-allowed; }
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--primary);
+      border: 1px solid var(--primary);
+    }
+    .btn-secondary:hover:not(:disabled) { background: var(--primary-50); }
+    .btn-secondary:disabled { background: var(--bg); color: var(--text-light); border-color: var(--border); }
+    .btn-success { background: var(--success); }
+    .btn-success:hover:not(:disabled) { background: #059669; }
+    .btn-danger { background: var(--danger); }
+    .btn-danger:hover:not(:disabled) { background: #dc2626; }
+    .btn-block { display: flex; width: 100%; }
+    .btn-sm { padding: 8px 14px; font-size: 13px; min-height: 36px; }
+    .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-group .btn { flex: 1; }
+
+    .search-results {
+      max-height: 280px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      margin-bottom: 14px;
+    }
+    .search-item {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.12s;
+    }
+    .search-item:last-child { border-bottom: none; }
+    .search-item:hover { background: var(--primary-50); }
+    .search-item.selected { background: var(--primary-light); }
+    .search-item .meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    .search-empty {
+      padding: 18px 14px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+      background: var(--surface);
+      border: 1px dashed var(--border-strong);
+      border-radius: var(--radius-sm);
+      margin-bottom: 14px;
+    }
+    .search-empty-icon {
+      font-size: 22px;
+      color: var(--text-light);
+      margin-bottom: 6px;
+    }
+
+    #debug-badge {
+      display: none;
+      position: fixed;
+      bottom: 100px;
+      right: 12px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #ffffff;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      z-index: 90;
+      box-shadow: var(--shadow);
+      font-family: monospace;
+      letter-spacing: -0.5px;
+    }
+    #debug-badge:hover { background: var(--primary-dark); }
+    #debug-panel {
+      display: none;
+      position: fixed;
+      bottom: 152px;
+      right: 12px;
+      width: 320px;
+      max-height: 360px;
+      overflow-y: auto;
+      background: var(--surface);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      box-shadow: var(--shadow-lg);
+      z-index: 91;
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+    #debug-panel.visible { display: block; }
+    #debug-panel .debug-entry {
+      padding: 3px 0;
+      border-bottom: 1px solid var(--border);
+      word-break: break-all;
+    }
+    #debug-panel .debug-entry:last-child { border-bottom: none; }
+    #debug-panel .debug-time {
+      color: var(--text-muted);
+      margin-right: 6px;
+      font-weight: 600;
+    }
+
+    .dropzone {
+      border: 2px dashed var(--border-strong);
+      border-radius: var(--radius);
+      padding: 32px 18px;
+      text-align: center;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      margin-bottom: 14px;
+      background: var(--bg);
+    }
+    .dropzone:hover { border-color: var(--primary); color: var(--primary); }
+    .dropzone.dragover { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+    .dropzone-icon {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: var(--primary-light);
+      color: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      margin: 0 auto 12px;
+    }
+    .dropzone p { margin: 4px 0; font-size: 14px; }
+    .dropzone .hint { font-size: 12px; color: var(--text-light); }
+    .thumb-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .thumb {
+      position: relative;
+      width: 100%;
+      padding-top: 100%;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+    .thumb img {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .thumb .remove {
+      position: absolute;
+      top: 4px; right: 4px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(239, 68, 68, 0.92);
+      color: #ffffff;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0;
+      font-weight: 700;
+    }
+
+    .qr-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+    #qr-canvas, #qr-canvas-small {
+      display: inline-block;
+      background: #ffffff;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+    }
+    .qr-info { margin-top: 14px; font-size: 14px; color: var(--text-muted); }
+    .qr-info strong { color: var(--text); }
+    .qr-info-row { margin: 2px 0; }
+
+    .timeline {
+      position: relative;
+      padding-left: 28px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 8px; top: 8px; bottom: 8px;
+      width: 2px;
+      background: var(--border);
+    }
+    .timeline-item { position: relative; padding-bottom: 22px; }
+    .timeline-item:last-child { padding-bottom: 0; }
+    .timeline-dot {
+      position: absolute;
+      left: -24px; top: 6px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 3px solid var(--surface);
+      box-shadow: 0 0 0 2px var(--primary);
+    }
+    .timeline-date {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .timeline-desc { font-weight: 600; margin-bottom: 6px; font-size: 14px; color: var(--text); }
+    .timeline-detail { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; line-height: 1.5; }
+    .timeline-detail strong { color: var(--text); font-weight: 600; }
+    .timeline-photos { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .timeline-photos img {
+      width: 72px; height: 72px;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .timeline-photos img:hover { transform: scale(1.05); }
+
+    .alert {
+      background: var(--warning-light);
+      border-left: 4px solid var(--warning);
+      color: var(--warning-dark);
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 14px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .alert-error { background: var(--danger-light); border-left-color: var(--danger); color: var(--danger-dark); }
+    .alert-success { background: var(--success-light); border-left-color: var(--success); color: var(--success-dark); }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-muted);
+    }
+    .empty-icon {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: var(--bg);
+      color: var(--text-light);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 32px;
+      margin-bottom: 16px;
+    }
+    .empty-state h3 {
+      margin: 0 0 6px;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .empty-state p { margin: 0 0 18px; font-size: 14px; color: var(--text-muted); }
+
+    .qr-card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .qr-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .qr-card:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+    .qr-card-thumb {
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 12px;
+      min-height: 140px;
+    }
+    .qr-card-patente {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+    .qr-card-meta {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+    .qr-card-actions { display: flex; gap: 6px; }
+    .qr-card-actions .btn { flex: 1; font-size: 12px; padding: 8px 10px; min-height: 34px; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: var(--radius-lg);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+    .helper-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: -8px;
+      margin-bottom: 14px;
+    }
+
+    .wizard-progress {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 18px;
+      padding: 4px;
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+    }
+    .wizard-step {
+      flex: 1;
+      padding: 10px 12px;
+      text-align: center;
+      border-radius: var(--radius-lg);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: transparent;
+      transition: background 0.2s, color 0.2s;
+    }
+    .wizard-step.active {
+      background: var(--primary);
+      color: #ffffff;
+    }
+    .wizard-step.done {
+      background: var(--success-light);
+      color: var(--success-dark);
+    }
+    .wizard-step .step-num {
+      display: inline-flex;
+      align-items: center; justify-content: center;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      font-size: 11px;
+      margin-right: 6px;
+    }
+    .wizard-step:not(.active) .step-num {
+      background: var(--bg);
+    }
+    .wizard-step.done .step-num { background: var(--success); color: white; }
+
+    .step-panel { display: none; }
+    .step-panel.active { display: block; animation: fadeIn 0.25s ease-out; }
+
+    .consentimiento {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      margin-bottom: 14px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .consentimiento input { width: auto; margin: 0; }
+
+    .tabbar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      box-shadow: 0 -2px 12px rgba(15, 23, 42, 0.05);
+      z-index: 100;
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .tab {
+      flex: 1;
+      padding: 10px 4px 10px;
+      text-align: center;
+      cursor: pointer;
+      color: var(--text-muted);
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      transition: color 0.15s;
+    }
+    .tab .icon {
+      display: block;
+      font-size: 20px;
+      margin-bottom: 3px;
+    }
+    .tab.active { color: var(--primary); }
+
+    .fab {
+      display: none;
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      box-shadow: 0 6px 16px rgba(30, 64, 175, 0.35);
+      border: none;
+      cursor: pointer;
+      font-size: 28px;
+      font-weight: 300;
+      z-index: 99;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s, background 0.15s;
+    }
+    .fab:hover { background: var(--primary-dark); transform: scale(1.05); }
+    .fab:active { transform: scale(0.95); }
+
+    #toast-container {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+      max-width: 90vw;
+      align-items: center;
+    }
+    .toast {
+      background: #1e293b;
+      color: white;
+      padding: 12px 22px;
+      border-radius: var(--radius-lg);
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      animation: toast-in 0.3s ease-out;
+      pointer-events: auto;
+      max-width: 100%;
+      text-align: center;
+    }
+    .toast-success { background: var(--success); }
+    .toast-error { background: var(--danger); }
+    .toast-warning { background: var(--warning); color: #1e293b; }
+    .toast-info { background: var(--primary); }
+    .toast-out { opacity: 0; transform: translateY(20px); transition: all 0.3s ease-out; }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.35);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.92);
+      z-index: 9998;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      cursor: pointer;
+    }
+    .lightbox.open { display: flex; animation: fadeIn 0.2s ease-out; }
+    .lightbox img {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: var(--radius-sm);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+
+    .skel {
+      background: linear-gradient(90deg, var(--bg) 25%, var(--border) 50%, var(--bg) 75%);
+      background-size: 200% 100%;
+      animation: skel 1.4s ease-in-out infinite;
+      border-radius: var(--radius-sm);
+      color: transparent;
+    }
+    @keyframes skel { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    .selected-vehicle-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      background: var(--success-light);
+      border: 1px solid var(--success);
+      border-radius: var(--radius);
+      margin-bottom: 14px;
+    }
+    .selected-vehicle-icon {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--success);
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .selected-vehicle-info { flex: 1; min-width: 0; }
+    .selected-vehicle-title { font-weight: 700; font-size: 15px; color: var(--success-dark); }
+    .selected-vehicle-meta { font-size: 12px; color: var(--success-dark); margin-top: 2px; }
+
+    @media (min-width: 720px) {
+      .stats { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    @media (min-width: 900px) {
+      .sidebar { display: flex; }
+      body { padding-bottom: 24px; }
+      .app {
+        margin-left: 240px;
+        margin-right: auto;
+        margin-top: 0;
+        padding: 24px 32px;
+        max-width: 1000px;
+      }
+      .header {
+        border-radius: var(--radius);
+        padding: 22px 28px;
+      }
+      .header h1 { font-size: 22px; }
+      .btn-logout-mobile { display: none; }
+      .tabbar { display: none; }
+      .fab { display: none !important; }
+      #toast-container { bottom: 24px; }
+    }
+    @media (max-width: 899px) {
+      .fab { display: flex; }
+    }
+    @media (max-width: 480px) {
+      .row { grid-template-columns: 1fr; }
+      .quick-actions { grid-template-columns: 1fr; }
+      .qr-card-grid { grid-template-columns: 1fr; }
+    }
+
+    .diag-banner {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    .diag-banner.diag-error { background: #ef4444; color: #ffffff; }
+    .diag-banner.diag-warning { background: #f59e0b; color: #1e293b; }
+    .diag-banner.diag-info { background: var(--primary); color: #ffffff; }
+    .diag-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      max-width: 720px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    .diag-icon {
+      font-size: 18px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.25);
+      flex-shrink: 0;
+    }
+    .diag-banner.diag-warning .diag-icon { background: rgba(30, 41, 59, 0.18); }
+    .diag-text { flex: 1; line-height: 1.35; }
+    .diag-retry {
+      background: rgba(255, 255, 255, 0.2);
+      color: inherit;
+      border: 1px solid currentColor;
+      padding: 6px 14px;
+      border-radius: 16px;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: inherit;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .diag-retry:hover { background: rgba(255, 255, 255, 0.3); }
+    .diag-banner.diag-warning .diag-retry:hover { background: rgba(30, 41, 59, 0.15); }
+
+    .logo-taller-img { display: none; max-height: 56px; max-width: 180px; height: auto; }
+    .logo-placeholder {
+      width: 140px; height: 56px;
+      background: var(--negro-soft);
+      border: 2px dashed var(--rojo);
+      border-radius: 10px;
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 6px;
+      color: var(--rojo); font-weight: 700; font-size: 12px;
+      letter-spacing: 2px;
+    }
+    .header-left {
+      display: flex; align-items: center; gap: 14px; min-width: 0;
+    }
+    .header-brand-block { display: flex; flex-direction: column; min-width: 0; }
+    .header-right {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end;
+    }
+    .header-contact {
+      display: inline-flex; align-items: center; gap: 5px;
+      color: #ffffff; text-decoration: none;
+      font-size: 12px; font-weight: 600;
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      transition: background 0.15s;
+    }
+    .header-contact:hover { background: rgba(255, 255, 255, 0.22); }
+    .header-contact svg { flex-shrink: 0; opacity: 0.92; }
+
+    .sidebar-brand .logo-taller-img { max-height: 36px; max-width: 120px; }
+    .sidebar-brand .logo-placeholder { width: 100px; height: 36px; font-size: 10px; letter-spacing: 1.5px; }
+
+    @media (max-width: 480px) {
+      .header-contact { font-size: 11px; padding: 5px 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="diagnosticoBanner" class="diag-banner" style="display:none;">
+    <div class="diag-content">
+      <span class="diag-icon"></span>
+      <span class="diag-text"></span>
+      <button class="diag-retry" type="button">Reintentar</button>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <img id="logoTallerSidebar" class="logo-taller-img" alt="Logo del taller">
+      <div id="logoPlaceholderSidebar" class="logo-placeholder">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>
+        <span>LOGO</span>
+      </div>
+      <div class="sidebar-brand-text">
+        Mecánica Martínez
+        <small>Panel del Taller</small>
+      </div>
+    </div>
+    <nav id="sidebarNav">
+      <button class="nav-item active" data-target="sec-inicio"><span class="nav-icon">▦</span><span class="nav-label">Inicio</span></button>
+      <button class="nav-item" data-target="sec-servicio"><span class="nav-icon">▤</span><span class="nav-label">Servicio</span></button>
+      <button class="nav-item" data-target="sec-nuevo"><span class="nav-icon">⊕</span><span class="nav-label">Nuevo vehículo</span></button>
+      <button class="nav-item" data-target="sec-historial"><span class="nav-icon">◷</span><span class="nav-label">Historial</span></button>
+      <button class="nav-item" data-target="sec-qrs"><span class="nav-icon">▣</span><span class="nav-label">Mis QRs</span></button>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-logout" id="btnLogoutSidebar">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <div class="app">
+    <div class="header">
+      <div class="header-left">
+        <img id="logoTallerHeader" class="logo-taller-img" alt="Logo del taller">
+        <div id="logoPlaceholderHeader" class="logo-placeholder">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 6 9 1.6 4.7C.4 7.1.9 10.1 2.9 12.1c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l2.3-2.3c.5-.4.5-1.1.1-1.4z"/></svg>
+          <span>LOGO</span>
+        </div>
+        <div class="header-brand-block">
+          <h1>Panel del Taller</h1>
+        </div>
+      </div>
+      <div class="header-right">
+        <a class="header-contact" href="https://www.instagram.com/martinez_mecanicaautomotriz/" target="_blank" rel="noopener noreferrer" title="Instagram">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.81.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.81-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.81-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.81.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16M12 0C8.74 0 8.33.01 7.05.07 5.78.13 4.9.33 4.14.63c-.79.31-1.46.72-2.13 1.39C1.34 2.69.93 3.36.62 4.15.32 4.91.12 5.79.06 7.06.01 8.33 0 8.74 0 12s.01 3.67.07 4.95c.05 1.27.25 2.15.55 2.91.31.79.72 1.46 1.39 2.13.67.67 1.34 1.08 2.13 1.39.76.3 1.64.5 2.91.55C8.33 23.99 8.74 24 12 24s3.67-.01 4.95-.07c1.27-.05 2.15-.25 2.91-.55.79-.31 1.46-.72 2.13-1.39.67-.67 1.08-1.34 1.39-2.13.3-.76.5-1.64.55-2.91.06-1.28.07-1.69.07-4.95s-.01-3.67-.07-4.95c-.05-1.27-.25-2.15-.55-2.91-.31-.79-.72-1.46-1.39-2.13C21.31 1.34 20.64.93 19.85.62 19.09.32 18.21.12 16.94.06 15.67.01 15.26 0 12 0zm0 5.84A6.16 6.16 0 0 0 5.84 12 6.16 6.16 0 0 0 12 18.16 6.16 6.16 0 0 0 18.16 12 6.16 6.16 0 0 0 12 5.84zm0 10.16A4 4 0 1 1 12 8a4 4 0 0 1 0 8zm6.4-11.85a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88z"/></svg>
+          <span class="header-contact-text">Instagram</span>
+        </a>
+        <a class="header-contact" href="tel:5493442625581" title="Llamanos">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56-.35-.12-.74-.03-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.11-.56-2.3-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 19.99 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.97-.99z"/></svg>
+          <span class="header-contact-text">3442-625581</span>
+        </a>
+        <button class="btn-logout-mobile" id="btnLogoutMobile">Salir</button>
+      </div>
+    </div>
+
+    <section id="sec-inicio" class="section active">
+      <div class="card">
+        <div class="card-title">Resumen</div>
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-value" id="stat-clientes">—</div>
+            <div class="stat-label">Clientes</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="stat-vehiculos">—</div>
+            <div class="stat-label">Vehículos</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="stat-servicios">—</div>
+            <div class="stat-label">Servicios</div>
+          </div>
+          <div class="stat">
+            <div class="stat-value" id="stat-mes">—</div>
+            <div class="stat-label">Últimos 30 días</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Acciones rápidas</div>
+        <div class="quick-actions">
+          <button class="quick-action" data-target="sec-servicio">
+            <div class="qa-icon">▤</div>
+            <span>Cargar servicio</span>
+          </button>
+          <button class="quick-action" data-target="sec-nuevo">
+            <div class="qa-icon">⊕</div>
+            <span>Nuevo vehículo</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Actividad reciente</div>
+        <div id="actividad-reciente">
+          <div class="empty-state">
+            <div class="empty-icon">◷</div>
+            <p>Cargando actividad...</p>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-secondary btn-block" id="btnActualizarDashboard">Actualizar datos</button>
+    </section>
+
+    <section id="sec-nuevo" class="section">
+      <div class="wizard-progress">
+        <div class="wizard-step active" data-step="1"><span class="step-num">1</span>Cliente</div>
+        <div class="wizard-step" data-step="2"><span class="step-num">2</span>Vehículo</div>
+        <div class="wizard-step" data-step="3"><span class="step-num">3</span>QR</div>
+      </div>
+
+      <div id="paso-cliente" class="step-panel active">
+        <div class="card">
+          <div class="card-title">Paso 1 · Cliente</div>
+          <label>Buscar cliente existente</label>
+          <input type="text" id="buscarClienteInput" placeholder="Nombre, teléfono o ID">
+          <div id="buscarClienteResultados" class="search-results" style="display:none"></div>
+          <button class="btn btn-secondary btn-block" id="btnMostrarFormCliente">+ Nuevo cliente</button>
+        </div>
+
+        <div id="formNuevoCliente" class="card" style="display:none">
+          <div class="card-title">Datos del nuevo cliente</div>
+          <label>Nombre completo *</label>
+          <input type="text" id="cli-nombre" placeholder="Juan Pérez">
+          <div class="row">
+            <div>
+              <label>Teléfono</label>
+              <input type="tel" id="cli-telefono" placeholder="1145678901">
+            </div>
+            <div>
+              <label>Email</label>
+              <input type="email" id="cli-email" placeholder="juan@mail.com">
+            </div>
+          </div>
+          <label class="consentimiento">
+            <input type="checkbox" id="cli-consentimiento">
+            <span>El cliente acepta compartir sus datos</span>
+          </label>
+          <div class="btn-group">
+            <button class="btn" id="btnCrearCliente">Crear cliente</button>
+            <button class="btn btn-secondary" id="btnCancelarCliente">Cancelar</button>
+          </div>
+        </div>
+
+        <div id="clienteSeleccionadoBox" class="selected-vehicle-card" style="display:none">
+          <div class="selected-vehicle-icon">✓</div>
+          <div class="selected-vehicle-info">
+            <div class="selected-vehicle-title" id="clienteSeleccionadoNombre">—</div>
+            <div class="selected-vehicle-meta" id="clienteSeleccionadoMeta">—</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="btnCambiarCliente">Cambiar</button>
+        </div>
+      </div>
+
+      <div id="paso-vehiculo" class="step-panel">
+        <div class="card">
+          <div class="card-title">Paso 2 · Datos del vehículo</div>
+          <label>Patente *</label>
+          <input type="text" id="veh-patente" placeholder="AB123CD" style="text-transform: uppercase;">
+          <div class="row">
+            <div>
+              <label>Marca *</label>
+              <input type="text" id="veh-marca" placeholder="Toyota">
+            </div>
+            <div>
+              <label>Modelo *</label>
+              <input type="text" id="veh-modelo" placeholder="Etios">
+            </div>
+          </div>
+          <label>Año</label>
+          <input type="number" id="veh-anio" placeholder="2020" min="1950" max="2030">
+          <label>Combustible</label>
+          <select id="veh-combustible" name="combustible">
+            <option value="">Seleccionar...</option>
+            <option value="Nafta">Nafta</option>
+            <option value="Diesel">Diésel</option>
+            <option value="GNC">GNC</option>
+            <option value="Nafta + GNC">Nafta + GNC</option>
+            <option value="Híbrido">Híbrido</option>
+            <option value="Eléctrico">Eléctrico</option>
+          </select>
+          <div class="btn-group">
+            <button class="btn" id="btnCrearVehiculo">Generar QR</button>
+            <button class="btn btn-secondary" id="btnVolverCliente">Atrás</button>
+          </div>
+        </div>
+
+        <div id="qrGeneradoBox" class="qr-box" style="display:none">
+          <div id="qr-canvas"></div>
+          <div class="qr-info">
+            <div class="qr-info-row"><strong id="qr-patente">—</strong></div>
+            <div class="qr-info-row" id="qr-detalles">—</div>
+            <div style="margin-top:10px; font-size:12px;">
+              <span class="badge">Activo</span>
+              <span id="qr-token" style="margin-left:6px; font-family: monospace;"></span>
+            </div>
+          </div>
+          <p style="margin-top: 14px; color: var(--text-muted); font-size: 13px;">Listo, imprimí la tarjeta</p>
+          <div class="btn-group" style="margin-top:12px;">
+            <button class="btn" id="btnImprimirQR">Imprimir tarjeta</button>
+            <button class="btn btn-secondary" id="btnCargarPrimerServicio">Cargar primer servicio</button>
+          </div>
+          <button class="btn btn-secondary btn-block" id="btnNuevoOtroVehiculo" style="margin-top:8px;">+ Nuevo vehículo</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="sec-servicio" class="section">
+      <div class="card">
+        <div class="card-title">Vehículo</div>
+        <input type="text" id="serv-buscar-vehiculo" placeholder="Buscar por patente, marca o cliente">
+        <div id="serv-buscar-resultados" class="search-results" style="display:none"></div>
+        <div id="serv-vehiculo-seleccionado" style="display:none">
+          <div class="selected-vehicle-card" style="margin-bottom:0;">
+            <div class="selected-vehicle-icon">✓</div>
+            <div class="selected-vehicle-info">
+              <div class="selected-vehicle-title" id="serv-vehiculo-info">—</div>
+              <div class="selected-vehicle-meta">Vehículo listo para cargar servicio</div>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="btnCambiarVehiculoServicio">Cambiar</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="form-servicio" class="card" style="display:none">
+        <div class="card-title">Nuevo servicio</div>
+        <div class="row">
+          <div>
+            <label>Fecha *</label>
+            <input type="date" id="srv-fecha">
+          </div>
+          <div>
+            <label>Kilometraje</label>
+            <input type="number" id="srv-kilometraje" placeholder="50000">
+          </div>
+        </div>
+        <label>Descripción *</label>
+        <textarea id="srv-descripcion" placeholder="Cambio de aceite y filtro..."></textarea>
+        <label>Repuestos utilizados</label>
+        <textarea id="srv-repuestos" placeholder="Filtro Mann W712/75, Aceite 5W30..."></textarea>
+        <label>Próximo mantenimiento</label>
+        <input type="text" id="srv-proximo" placeholder="Cada 10.000 km o Marzo 2027">
+        <label>Observaciones</label>
+        <textarea id="srv-observaciones" placeholder="Vehículo en buen estado general..."></textarea>
+
+        <label>Fotos del service</label>
+        <div class="dropzone" id="dropzone">
+          <div class="dropzone-icon">▥</div>
+          <p><strong>Arrastrá las fotos acá</strong></p>
+          <p class="hint">o tocá para seleccionar archivos</p>
+        </div>
+        <input type="file" id="fotoInput" accept="image/*" multiple style="display:none">
+        <div id="upload-progress" style="display:none; margin-bottom: 12px;">
+          <div style="height: 6px; background: var(--border); border-radius: 3px; overflow: hidden;">
+            <div id="upload-bar" style="height: 100%; background: var(--primary); width: 0%; transition: width 0.3s;"></div>
+          </div>
+          <div id="upload-text" style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">Subiendo...</div>
+        </div>
+        <div id="thumbs" class="thumb-grid"></div>
+
+        <button class="btn btn-block" id="btnGuardarServicio">Guardar servicio</button>
+      </div>
+    </section>
+
+    <section id="sec-historial" class="section">
+      <div class="card">
+        <div class="card-title">Buscar vehículo</div>
+        <input type="text" id="hist-buscar" placeholder="Patente, marca o cliente">
+        <div id="hist-buscar-resultados" class="search-results" style="display:none"></div>
+      </div>
+      <div id="hist-detalle">
+        <div class="card">
+          <div class="empty-state">
+            <div class="empty-icon">◷</div>
+            <h3>Buscá un vehículo</h3>
+            <p>Tocá el buscador de arriba para ver el historial</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sec-qrs" class="section">
+      <div class="card">
+        <div class="card-title">Vehículos</div>
+        <input type="text" id="qrs-buscar" placeholder="Buscar por patente o cliente">
+      </div>
+      <div id="qrs-lista"></div>
+    </section>
+  </div>
+
+  <nav class="tabbar">
+    <button class="tab active" data-target="sec-inicio">
+      <span class="icon">▦</span>
+      Inicio
+    </button>
+    <button class="tab" data-target="sec-servicio">
+      <span class="icon">▤</span>
+      Servicio
+    </button>
+    <button class="tab" data-target="sec-historial">
+      <span class="icon">◷</span>
+      Historial
+    </button>
+    <button class="tab" data-target="sec-qrs">
+      <span class="icon">▣</span>
+      QRs
+    </button>
+  </nav>
+
+  <button class="fab" id="fab" title="Acción rápida">+</button>
+
+  <div id="toast-container" aria-live="polite"></div>
+
+  <div id="debug-badge" onclick="document.getElementById('debug-panel').classList.toggle('visible')">DBG</div>
+  <div id="debug-panel"></div>
+
+  <div id="lightbox" class="lightbox" onclick="cerrarLightbox()">
+    <img id="lightbox-img" src="" alt="">
+  </div>
+
+  <script src="https://unpkg.com/qr-code-styling@1.6.0-rc.1/lib/qr-code-styling.js"></script>
+  <script>
+    const TALLER_NOMBRE = 'Mecánica Martínez';
+    const TALLER_INSTAGRAM = 'https://www.instagram.com/martinez_mecanicaautomotriz/';
+    const TALLER_INSTAGRAM_HANDLE = '@martinez_mecanicaautomotriz';
+    const TALLER_TELEFONO = '3442-625581';
+    const TALLER_TELEFONO_WA = '5493442625581';
+    const LOGO_URL = 'https://lh3.googleusercontent.com/d/1WDYg8rkNyRedO_ZINDX35eQyWNQdQ5yW';
+
+    const SESSION_KEY = 'mecanicoSession';
+    const session = localStorage.getItem(SESSION_KEY);
+
+    window.MECANICO_DEBUG = window.MECANICO_DEBUG === true;
+
+    const dbg = {
+      entries: [],
+      log: function () {
+        if (!window.MECANICO_DEBUG) return;
+        const args = Array.prototype.slice.call(arguments);
+        args.unshift('[MECANICO]');
+        try { console.log.apply(console, args); } catch (e) {}
+      },
+      apiCall: function (action, payload) {
+        if (!window.MECANICO_DEBUG) return;
+        dbg.addEntry({ tipo: 'call', accion: action, payload: payload, hora: dbg.ahora() });
+      },
+      apiResp: function (action, response) {
+        if (!window.MECANICO_DEBUG) return;
+        dbg.addEntry({ tipo: 'ok', accion: action, resumen: dbg.resumir(response), hora: dbg.ahora() });
+      },
+      apiErr: function (action, error) {
+        if (!window.MECANICO_DEBUG) return;
+        dbg.addEntry({ tipo: 'err', accion: action, resumen: String(error || '').slice(0, 100), hora: dbg.ahora() });
+      },
+      state: function (clave, valor) {
+        if (!window.MECANICO_DEBUG) return;
+        dbg.addEntry({ tipo: 'state', accion: clave, resumen: dbg.resumir(valor), hora: dbg.ahora() });
+      },
+      ahora: function () {
+        const d = new Date();
+        return d.toTimeString().slice(0, 8);
+      },
+      resumir: function (obj) {
+        try {
+          const s = JSON.stringify(obj);
+          return s.length > 120 ? s.slice(0, 120) + '...' : s;
+        } catch (e) {
+          return String(obj).slice(0, 120);
+        }
+      },
+      addEntry: function (entry) {
+        dbg.entries.push(entry);
+        if (dbg.entries.length > 80) dbg.entries.shift();
+        dbg.renderPanel();
+      },
+      renderPanel: function () {
+        const panel = document.getElementById('debug-panel');
+        if (!panel) return;
+        const lista = dbg.entries.slice().reverse().slice(0, 40);
+        panel.innerHTML = lista.map(function (e) {
+          const color = e.tipo === 'call' ? 'var(--primary)' : (e.tipo === 'err' ? 'var(--danger)' : (e.tipo === 'state' ? 'var(--warning-dark)' : 'var(--success-dark)'));
+          const texto = e.tipo === 'call'
+            ? e.accion + ' → ' + dbg.resumir(e.payload || {})
+            : e.tipo === 'state'
+              ? e.accion + ' = ' + e.resumen
+              : e.accion + ': ' + e.resumen;
+          return '<div class="debug-entry"><span class="debug-time">' + e.hora + '</span> <span class="debug-text" style="color:' + color + '">' + texto + '</span></div>';
+        }).join('');
+      },
+      init: function () {
+        if (!window.MECANICO_DEBUG) {
+          const badge = document.getElementById('debug-badge');
+          if (badge) badge.style.display = 'none';
+          return;
+        }
+        const badge = document.getElementById('debug-badge');
+        if (badge) badge.style.display = 'flex';
+        dbg.renderPanel();
+        dbg.log('Debug mode ON');
+      }
+    };
+
+    function mostrarDiagnostico(mensaje, tipo, reintentar) {
+      tipo = tipo || 'error';
+      const banner = document.getElementById('diagnosticoBanner');
+      if (!banner) return;
+      const texto = banner.querySelector('.diag-text');
+      const icono = banner.querySelector('.diag-icon');
+      const btn = banner.querySelector('.diag-retry');
+      if (texto) texto.textContent = mensaje;
+      if (icono) icono.textContent = tipo === 'error' ? 'X' : (tipo === 'warning' ? '!' : 'i');
+      banner.className = 'diag-banner diag-' + tipo;
+      if (reintentar) {
+        btn.style.display = 'inline-block';
+        btn.onclick = reintentar;
+      } else {
+        btn.style.display = 'none';
+        btn.onclick = null;
+      }
+      banner.style.display = 'flex';
+    }
+
+    function ocultarDiagnostico() {
+      const banner = document.getElementById('diagnosticoBanner');
+      if (banner) banner.style.display = 'none';
+    }
+
+    function escapeHtml(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+      });
+    }
+
+    function recargarDatos() {
+      if (typeof loadDashboard === 'function') loadDashboard();
+      if (typeof cargarActividadReciente === 'function') cargarActividadReciente();
+      ocultarDiagnostico();
+    }
+
+    (function diagnosticoInicial() {
+      if (typeof google === 'undefined' || !google.script || !google.script.run) {
+        mostrarDiagnostico('No se puede comunicar con el backend de Google Apps Script. Recargá la página.', 'error', function () { location.reload(); });
+        return;
+      }
+      const sesion = localStorage.getItem(SESSION_KEY);
+      if (!sesion) {
+        mostrarDiagnostico('Sin sesión activa. Por favor iniciá sesión.', 'error', function () { window.top.location.href = '<?= webappUrl ?>?accion=admin'; });
+        return;
+      }
+      google.script.run
+        .withSuccessHandler(function (data) {
+          if (!data || !data.ok) {
+            if (/sesión|expirad/i.test((data && data.error) || '')) {
+              mostrarDiagnostico('Tu sesión expiró. Volvé a iniciar sesión.', 'error', function () { window.top.location.href = '<?= webappUrl ?>?accion=admin'; });
+            } else {
+              mostrarDiagnostico('Error del backend al cargar: ' + ((data && data.error) || 'desconocido'), 'warning', function () { recargarDatos(); });
+            }
+          } else {
+            console.log('Backend OK al cargar:', data);
+          }
+        })
+        .withFailureHandler(function (err) {
+          mostrarDiagnostico('No se puede conectar al backend: ' + (err && err.message ? err.message : err) + '. Recargá la página.', 'error', function () { location.reload(); });
+        })
+        .apiAccion('dashboard', '{}', sesion);
+    })();
+
+    function mostrarToast(mensaje, tipo, duracion) {
+      tipo = tipo || 'info';
+      duracion = duracion || 3500;
+      const cont = document.getElementById('toast-container');
+      if (!cont) return;
+      const toast = document.createElement('div');
+      toast.className = 'toast toast-' + tipo;
+      toast.textContent = mensaje;
+      cont.appendChild(toast);
+      setTimeout(function () { toast.classList.add('toast-out'); }, duracion - 300);
+      setTimeout(function () { if (toast.parentNode) toast.remove(); }, duracion);
+    }
+
+    async function withButtonLoading(btn, fn) {
+      if (!btn) return await fn();
+      const textoOriginal = btn.textContent;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> ' + textoOriginal;
+      try {
+        return await fn();
+      } finally {
+        btn.disabled = false;
+        btn.textContent = textoOriginal;
+      }
+    }
+
+    function callBackend(functionName) {
+      var args = Array.prototype.slice.call(arguments, 1);
+      return new Promise(function (resolve) {
+        try {
+          if (typeof google === 'undefined' || !google.script || !google.script.run) {
+            mostrarDiagnostico('No se puede comunicar con el backend (google.script no disponible). Recargá la página.', 'error', function () { location.reload(); });
+            resolve({ ok: false, error: 'Backend no disponible' });
+            return;
+          }
+          if (typeof google.script.run[functionName] !== 'function') {
+            mostrarDiagnostico('Función del backend no disponible: ' + functionName + '. Recargá la página.', 'error', function () { location.reload(); });
+            resolve({ ok: false, error: 'Función no disponible: ' + functionName });
+            return;
+          }
+          google.script.run
+            .withSuccessHandler(function (data) {
+              if (data == null) {
+                mostrarDiagnostico('El backend devolvió una respuesta vacía. Reintentá.', 'warning', function () { recargarDatos(); });
+                resolve({ ok: false, error: 'Respuesta vacía del servidor' });
+                return;
+              }
+              if (!data.ok && data.error && /sesión|expirad/i.test(data.error)) {
+                mostrarDiagnostico('Tu sesión expiró. Volvé a iniciar sesión.', 'error', function () { window.top.location.href = '<?= webappUrl ?>?accion=admin'; });
+                resolve(data);
+                return;
+              }
+              if (data.ok) {
+                ocultarDiagnostico();
+              }
+              resolve(data);
+            })
+            .withFailureHandler(function (err) {
+              mostrarDiagnostico('Error de comunicación: ' + (err && err.message ? err.message : err) + '. Reintentá.', 'error', function () { recargarDatos(); });
+              resolve({ ok: false, error: 'Error de comunicación: ' + (err && err.message ? err.message : err) });
+            })[functionName].apply(null, args);
+        } catch (err) {
+          mostrarDiagnostico('Error iniciando llamada: ' + (err && err.message ? err.message : err) + '. Reintentá.', 'error', function () { recargarDatos(); });
+          resolve({ ok: false, error: 'Error iniciando llamada: ' + (err && err.message ? err.message : err) });
+        }
+      });
+    }
+
+    async function api(action, payload) {
+      const sesion = localStorage.getItem(SESSION_KEY) || '';
+      if (!sesion) {
+        window.location.href = '<?= webappUrl ?>?accion=admin';
+        return { ok: false, error: 'Sin sesión activa' };
+      }
+      dbg.apiCall(action, payload || {});
+      try {
+        const r = await callBackend('apiAccion', action, JSON.stringify(payload || {}), sesion);
+        if (apiOk(r)) {
+          dbg.apiResp(action, r);
+        } else {
+          dbg.apiErr(action, r && r.error ? r.error : r);
+        }
+        return r;
+      } catch (err) {
+        const errorMsg = String(err && err.message ? err.message : err);
+        dbg.apiErr(action, errorMsg);
+        return { ok: false, error: errorMsg };
+      }
+    }
+
+    function apiOk(r) {
+      return !!(r && r.ok === true);
+    }
+    function apiError(r, fallback) {
+      return (r && r.error) ? r.error : (fallback || 'Error desconocido');
+    }
+
+    function mostrarTab(target) {
+      document.querySelectorAll('.section').forEach(function (s) { s.classList.remove('active'); });
+      document.querySelectorAll('.tab').forEach(function (t) { t.classList.remove('active'); });
+      document.querySelectorAll('.nav-item').forEach(function (n) { n.classList.remove('active'); });
+      var sec = document.getElementById(target);
+      if (sec) sec.classList.add('active');
+      document.querySelectorAll('[data-target="' + target + '"]').forEach(function (el) {
+        el.classList.add('active');
+      });
+      if (target === 'sec-inicio') loadDashboard();
+      if (target === 'sec-qrs') loadQrs();
+    }
+
+    document.querySelectorAll('[data-target]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        mostrarTab(el.dataset.target);
+      });
+    });
+
+    async function cerrarSesion() {
+      try { await api('logout', {}); } catch (err) {}
+      localStorage.removeItem(SESSION_KEY);
+      window.location.href = '<?= webappUrl ?>?accion=admin';
+    }
+    document.getElementById('btnLogoutMobile').addEventListener('click', cerrarSesion);
+    document.getElementById('btnLogoutSidebar').addEventListener('click', cerrarSesion);
+
+    document.getElementById('fab').addEventListener('click', function () {
+      mostrarTab('sec-nuevo');
+    });
+
+    const state = {
+      clienteId: null,
+      clienteNombre: null,
+      vehiculoId: null,
+      vehiculoInfo: null,
+      fotos: [],
+      wizardStep: 1,
+      totalServiciosCache: 0,
+      vehiculosCache: [],
+      dashboard: null
+    };
+
+    function setWizardStep(n) {
+      state.wizardStep = n;
+      document.querySelectorAll('.wizard-step').forEach(function (s) {
+        var num = parseInt(s.dataset.step, 10);
+        s.classList.remove('active', 'done');
+        if (num === n) s.classList.add('active');
+        else if (num < n) s.classList.add('done');
+      });
+      document.getElementById('paso-cliente').classList.toggle('active', n === 1);
+      document.getElementById('paso-vehiculo').classList.toggle('active', n === 2 || n === 3);
+      if (n === 3) {
+        document.getElementById('qrGeneradoBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    document.getElementById('btnActualizarDashboard').addEventListener('click', loadDashboard);
+    async function loadDashboard() {
+      const r = await api('dashboard');
+      if (apiOk(r)) {
+        state.dashboard = r;
+        document.getElementById('stat-clientes').textContent = r.totalClientes != null ? r.totalClientes : 0;
+        document.getElementById('stat-vehiculos').textContent = r.totalVehiculos != null ? r.totalVehiculos : 0;
+        document.getElementById('stat-servicios').textContent = r.totalServicios != null ? r.totalServicios : 0;
+        document.getElementById('stat-mes').textContent = r.serviciosUltimoMes != null ? r.serviciosUltimoMes : 0;
+        state.totalServiciosCache = r.totalServicios || 0;
+        cargarActividadReciente();
+      } else {
+        mostrarToast('No se pudo cargar el dashboard: ' + apiError(r), 'error');
+      }
+    }
+
+    async function cargarActividadReciente() {
+      const cont = document.getElementById('actividad-reciente');
+      const r = await api('buscarVehiculos', { q: '' });
+      if (!apiOk(r)) {
+        cont.innerHTML = '<div class="empty-state"><p>No se pudo cargar la actividad.</p></div>';
+        return;
+      }
+      const vehiculos = r.vehiculos || [];
+      state.vehiculosCache = vehiculos;
+      dbg.state('vehiculosCache.length', vehiculos.length);
+      if (vehiculos.length === 0) {
+        cont.innerHTML = '<div class="empty-state"><div class="empty-icon">▦</div><h3>Todavía no hay vehículos</h3><p>Empezá cargando el primero</p><button class="btn" onclick="mostrarTab(\'sec-nuevo\')">Crear primer vehículo</button></div>';
+        return;
+      }
+      const ultimos = vehiculos.slice(0, 3);
+      cont.innerHTML = ultimos.map(function (v) {
+        const fecha = v.Fecha_Alta ? String(v.Fecha_Alta).slice(0, 10) : '';
+        return '<div class="recent-item">' +
+          '<div class="recent-icon">▣</div>' +
+          '<div class="recent-body">' +
+          '<div class="recent-title">' + (v.Patente || '—') + ' · ' + (v.Marca || '') + ' ' + (v.Modelo || '') + '</div>' +
+          '<div class="recent-meta">' + (v.clienteNombre || 'Sin cliente') + (fecha ? ' · ' + fecha : '') + '</div>' +
+          '</div>' +
+          '<button class="btn btn-secondary btn-sm" onclick="verHistorialRapido(\'' + v.ID_Vehiculo + '\')">Ver</button>' +
+          '</div>';
+      }).join('');
+    }
+
+    function verHistorialRapido(id) {
+      mostrarTab('sec-historial');
+      cargarHistorial(id);
+    }
+
+    let clienteSearchTimer;
+    document.getElementById('buscarClienteInput').addEventListener('input', function (e) {
+      clearTimeout(clienteSearchTimer);
+      const q = e.target.value.trim();
+      clienteSearchTimer = setTimeout(function () { buscarClientes(q); }, 300);
+    });
+
+    async function buscarClientes(q) {
+      dbg.log('buscarClientes inicio q=' + JSON.stringify(q));
+      const r = await api('buscarClientes', { q: q });
+      dbg.log('buscarClientes r=' + dbg.resumir(r));
+      const cont = document.getElementById('buscarClienteResultados');
+      if (!cont) return;
+      if (!apiOk(r)) {
+        cont.innerHTML = '<div class="search-empty"><div class="search-empty-icon">X</div><div>Error: ' + escapeHtml(apiError(r, 'desconocido')) + '</div></div>';
+        cont.style.display = 'block';
+        return;
+      }
+      const clientes = r.clientes || [];
+      if (clientes.length === 0) {
+        let detalle = '';
+        if (state.dashboard && state.dashboard.totalClientes > 0) {
+          detalle = '<div style="margin-top: 8px; font-size: 12px; opacity: 0.7;">Hay ' + state.dashboard.totalClientes + ' clientes cargados pero ninguno coincide con la búsqueda.</div>';
+        } else {
+          detalle = '<div style="margin-top: 8px; font-size: 12px; opacity: 0.7;">El sistema no tiene clientes cargados todavía.</div>';
+        }
+        cont.innerHTML = '<div class="search-empty"><div class="search-empty-icon">∅</div><div>Sin resultados' + (q ? ' para "' + escapeHtml(q) + '"' : '') + '</div>' + detalle + '</div>';
+        cont.style.display = 'block';
+        return;
+      }
+      cont.innerHTML = clientes.map(function (c) {
+        const nombreSafe = String(c.Nombre || '—').replace(/"/g, '&quot;');
+        return '<div class="search-item" data-id="' + escapeHtml(c.ID_Cliente) + '" data-nombre="' + nombreSafe + '">' +
+          '<div><strong>' + escapeHtml(c.Nombre || '—') + '</strong></div>' +
+          '<div class="meta">' + escapeHtml(c.Telefono || '') + (c.Email ? ' · ' + escapeHtml(c.Email) : '') + ' · ' + escapeHtml(c.ID_Cliente) + '</div>' +
+          '</div>';
+      }).join('');
+      cont.style.display = 'block';
+      cont.querySelectorAll('.search-item').forEach(function (item) {
+        item.addEventListener('click', function () {
+          seleccionarCliente(item.dataset.id, item.dataset.nombre);
+        });
+      });
+    }
+
+    function seleccionarCliente(id, nombre) {
+      state.clienteId = id;
+      state.clienteNombre = nombre;
+      document.getElementById('buscarClienteInput').value = '';
+      document.getElementById('buscarClienteResultados').style.display = 'none';
+      document.getElementById('formNuevoCliente').style.display = 'none';
+      document.getElementById('clienteSeleccionadoNombre').textContent = nombre;
+      document.getElementById('clienteSeleccionadoMeta').textContent = 'ID ' + id;
+      document.getElementById('clienteSeleccionadoBox').style.display = 'flex';
+      setWizardStep(2);
+    }
+
+    document.getElementById('btnMostrarFormCliente').addEventListener('click', function () {
+      document.getElementById('formNuevoCliente').style.display = 'block';
+      document.getElementById('buscarClienteInput').disabled = true;
+      document.getElementById('cli-nombre').focus();
+    });
+    document.getElementById('btnCancelarCliente').addEventListener('click', function () {
+      document.getElementById('formNuevoCliente').style.display = 'none';
+      document.getElementById('buscarClienteInput').disabled = false;
+    });
+    document.getElementById('btnCambiarCliente').addEventListener('click', function () {
+      state.clienteId = null;
+      state.clienteNombre = null;
+      document.getElementById('clienteSeleccionadoBox').style.display = 'none';
+      document.getElementById('buscarClienteInput').disabled = false;
+      setWizardStep(1);
+    });
+
+    document.getElementById('btnCrearCliente').addEventListener('click', async function () {
+      const nombre = document.getElementById('cli-nombre').value.trim();
+      if (!nombre) { mostrarToast('Ingresá el nombre del cliente', 'warning'); return; }
+      const payload = {
+        nombre: nombre,
+        telefono: document.getElementById('cli-telefono').value.trim(),
+        email: document.getElementById('cli-email').value.trim(),
+        consentimiento: document.getElementById('cli-consentimiento').checked
+      };
+      const btn = this;
+      const r = await withButtonLoading(btn, function () {
+        return api('altaCliente', payload);
+      });
+      if (apiOk(r)) {
+        seleccionarCliente(r.id, nombre);
+        document.getElementById('cli-nombre').value = '';
+        document.getElementById('cli-telefono').value = '';
+        document.getElementById('cli-email').value = '';
+        document.getElementById('cli-consentimiento').checked = false;
+        mostrarToast('Cliente creado', 'success');
+      } else {
+        mostrarToast(apiError(r, 'Error creando cliente'), 'error');
+      }
+    });
+
+    document.getElementById('btnVolverCliente').addEventListener('click', function () {
+      setWizardStep(1);
+    });
+
+    document.getElementById('btnCrearVehiculo').addEventListener('click', async function () {
+      if (!state.clienteId) { mostrarToast('Seleccioná o creá un cliente primero', 'warning'); return; }
+      const patente = document.getElementById('veh-patente').value.trim().toUpperCase();
+      const marca = document.getElementById('veh-marca').value.trim();
+      const modelo = document.getElementById('veh-modelo').value.trim();
+      if (!patente || !marca || !modelo) {
+        mostrarToast('Patente, marca y modelo son obligatorios', 'warning');
+        return;
+      }
+      const payload = {
+        idCliente: state.clienteId,
+        patente: patente,
+        marca: marca,
+        modelo: modelo,
+        anio: document.getElementById('veh-anio').value,
+        combustible: document.getElementById('veh-combustible').value
+      };
+      const btn = this;
+      const r = await withButtonLoading(btn, function () {
+        return api('altaVehiculo', payload);
+      });
+      if (apiOk(r)) {
+        renderQR(r.id, r.token, r.urlCliente, patente, marca, modelo, payload.anio);
+        mostrarToast('Vehículo creado', 'success');
+      } else {
+        mostrarToast(apiError(r, 'Error creando vehículo'), 'error');
+      }
+    });
+
+    function renderQR(id, token, url, patente, marca, modelo, anio) {
+      state.vehiculoId = id;
+      const cont = document.getElementById('qr-canvas');
+      if (!cont) return;
+      cont.innerHTML = '';
+      try {
+        const qr = new QRCodeStyling({
+          width: 240,
+          height: 240,
+          data: url,
+          image: '',
+          dotsOptions: { color: '#0a0a0a', type: 'rounded' },
+          backgroundOptions: { color: '#ffffff' },
+          imageOptions: { crossOrigin: 'anonymous', margin: 8 },
+          qrOptions: { errorCorrectionLevel: 'M' }
+        });
+        qr.append(cont);
+      } catch (err) {
+        cont.innerHTML = '<div class="alert alert-error">No se pudo generar el QR</div>';
+      }
+      document.getElementById('qr-patente').textContent = patente + ' · ' + marca + ' ' + modelo;
+      document.getElementById('qr-detalles').textContent = anio ? ('Año ' + anio) : '';
+      document.getElementById('qr-token').textContent = token || '';
+      const box = document.getElementById('qrGeneradoBox');
+      box.style.display = 'block';
+      box.dataset.id = id;
+      box.dataset.patente = patente;
+      setWizardStep(3);
+    }
+
+    document.getElementById('btnImprimirQR').addEventListener('click', function () {
+      const id = document.getElementById('qrGeneradoBox').dataset.id;
+      if (!id) return;
+      const url = '<?= webappUrl ?>?accion=imprimir&v=' + encodeURIComponent(id) + '&session=' + encodeURIComponent(session);
+      window.open(url, '_blank');
+    });
+
+    document.getElementById('btnCargarPrimerServicio').addEventListener('click', function () {
+      const id = document.getElementById('qrGeneradoBox').dataset.id;
+      const patente = document.getElementById('qrGeneradoBox').dataset.patente;
+      state.vehiculoId = id;
+      state.vehiculoInfo = patente;
+      mostrarTab('sec-servicio');
+      seleccionarVehiculoParaServicio(id, patente);
+      setTimeout(function () { document.getElementById('srv-descripcion').focus(); }, 200);
+    });
+
+    document.getElementById('btnNuevoOtroVehiculo').addEventListener('click', function () {
+      state.clienteId = null;
+      state.clienteNombre = null;
+      state.vehiculoId = null;
+      document.getElementById('clienteSeleccionadoBox').style.display = 'none';
+      document.getElementById('qrGeneradoBox').style.display = 'none';
+      document.getElementById('veh-patente').value = '';
+      document.getElementById('veh-marca').value = '';
+      document.getElementById('veh-modelo').value = '';
+      document.getElementById('veh-anio').value = '';
+      document.getElementById('veh-combustible').value = '';
+      document.getElementById('buscarClienteInput').disabled = false;
+      setWizardStep(1);
+      mostrarTab('sec-nuevo');
+    });
+
+    let servSearchTimer;
+    document.getElementById('serv-buscar-vehiculo').addEventListener('input', function (e) {
+      clearTimeout(servSearchTimer);
+      const q = e.target.value.trim();
+      servSearchTimer = setTimeout(function () { buscarVehiculosParaServicio(q); }, 300);
+    });
+
+    async function buscarVehiculosParaServicio(q) {
+      dbg.log('buscarVehiculosParaServicio inicio q=' + JSON.stringify(q));
+      const r = await api('buscarVehiculos', { q: q });
+      dbg.log('buscarVehiculosParaServicio r=' + dbg.resumir(r));
+      const cont = document.getElementById('serv-buscar-resultados');
+      if (!cont) return;
+      if (!apiOk(r)) {
+        cont.innerHTML = '<div class="search-empty"><div class="search-empty-icon">X</div><div>Error: ' + escapeHtml(apiError(r, 'desconocido')) + '</div></div>';
+        cont.style.display = 'block';
+        return;
+      }
+      const vehiculos = r.vehiculos || [];
+      if (vehiculos.length === 0) {
+        let detalle = '';
+        if (state.dashboard && state.dashboard.totalVehiculos > 0) {
+          detalle = '<div style="margin-top: 8px; font-size: 12px; opacity: 0.7;">Hay ' + state.dashboard.totalVehiculos + ' vehículos cargados pero ninguno coincide con la búsqueda.</div>';
+        } else {
+          detalle = '<div style="margin-top: 8px; font-size: 12px; opacity: 0.7;">El sistema no tiene vehículos cargados todavía.</div>';
+        }
+        cont.innerHTML = '<div class="search-empty"><div class="search-empty-icon">∅</div><div>Sin vehículos' + (q ? ' para "' + escapeHtml(q) + '"' : '') + '</div>' + detalle + '</div>';
+        cont.style.display = 'block';
+        return;
+      }
+      cont.innerHTML = vehiculos.map(function (v) {
+        const info = (v.Patente || '') + ' · ' + (v.Marca || '') + ' ' + (v.Modelo || '') + (v.clienteNombre ? ' · ' + v.clienteNombre : '');
+        const infoSafe = String(info).replace(/"/g, '&quot;');
+        return '<div class="search-item" data-id="' + escapeHtml(v.ID_Vehiculo) + '" data-info="' + infoSafe + '">' +
+          '<div><strong>' + escapeHtml(v.Patente || 'Sin patente') + '</strong> · ' + escapeHtml(v.Marca || '') + ' ' + escapeHtml(v.Modelo || '') + '</div>' +
+          '<div class="meta">' + escapeHtml(v.clienteNombre || 'Sin cliente') + ' · ' + escapeHtml(v.ID_Vehiculo) + '</div>' +
+          '</div>';
+      }).join('');
+      cont.style.display = 'block';
+      cont.querySelectorAll('.search-item').forEach(function (item) {
+        item.addEventListener('click', function () {
+          seleccionarVehiculoParaServicio(item.dataset.id, item.dataset.info);
+        });
+      });
+    }
+
+    function seleccionarVehiculoParaServicio(id, info) {
+      state.vehiculoId = id;
+      state.vehiculoInfo = info;
+      document.getElementById('serv-buscar-vehiculo').value = '';
+      document.getElementById('serv-buscar-resultados').style.display = 'none';
+      document.getElementById('serv-vehiculo-info').textContent = info || '—';
+      document.getElementById('serv-vehiculo-seleccionado').style.display = 'block';
+      document.getElementById('form-servicio').style.display = 'block';
+      if (!document.getElementById('srv-fecha').value) {
+        document.getElementById('srv-fecha').value = new Date().toISOString().slice(0, 10);
+      }
+      document.getElementById('form-servicio').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.getElementById('btnCambiarVehiculoServicio').addEventListener('click', function () {
+      state.vehiculoId = null;
+      state.vehiculoInfo = null;
+      document.getElementById('serv-vehiculo-seleccionado').style.display = 'none';
+      document.getElementById('form-servicio').style.display = 'none';
+      state.fotos = [];
+      renderThumbs();
+    });
+
+    const dropzone = document.getElementById('dropzone');
+    const fotoInput = document.getElementById('fotoInput');
+    dropzone.addEventListener('click', function () { fotoInput.click(); });
+    dropzone.addEventListener('dragover', function (e) { e.preventDefault(); dropzone.classList.add('dragover'); });
+    dropzone.addEventListener('dragleave', function () { dropzone.classList.remove('dragover'); });
+    dropzone.addEventListener('drop', function (e) {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+    fotoInput.addEventListener('change', function (e) { handleFiles(e.target.files); });
+
+    async function handleFiles(files) {
+      const arr = Array.from(files || []).filter(function (f) { return f && f.type && f.type.startsWith('image/'); });
+      if (arr.length === 0) return;
+      const progress = document.getElementById('upload-progress');
+      const bar = document.getElementById('upload-bar');
+      const txt = document.getElementById('upload-text');
+      progress.style.display = 'block';
+      let done = 0;
+      for (let i = 0; i < arr.length; i++) {
+        const f = arr[i];
+        const reader = new FileReader();
+        const p = new Promise(function (resolve) {
+          reader.onload = async function () {
+            try {
+              const base64 = String(reader.result || '').split(',')[1];
+              const r = await api('subirFoto', {
+                base64: base64,
+                nombreArchivo: 'srv_' + Date.now() + '_' + (f.name || 'foto'),
+                mimeType: f.type
+              });
+              if (apiOk(r)) {
+                state.fotos.push({ id: r.id, url: r.url });
+                renderThumbs();
+              } else {
+                mostrarToast('No se pudo subir ' + (f.name || 'foto') + ': ' + apiError(r), 'error');
+              }
+            } catch (err) {
+              mostrarToast('Error subiendo foto', 'error');
+            }
+            done++;
+            const pct = Math.round((done / arr.length) * 100);
+            if (bar) bar.style.width = pct + '%';
+            if (txt) txt.textContent = 'Subiendo ' + done + ' de ' + arr.length;
+            resolve();
+          };
+          reader.onerror = function () {
+            done++;
+            resolve();
+          };
+        });
+        reader.readAsDataURL(f);
+        await p;
+      }
+      progress.style.display = 'none';
+      fotoInput.value = '';
+    }
+
+    function renderThumbs() {
+      const cont = document.getElementById('thumbs');
+      cont.innerHTML = state.fotos.map(function (f, i) {
+        const thumbUrl = 'https://drive.google.com/thumbnail?id=' + encodeURIComponent(f.id) + '&sz=w200';
+        return '<div class="thumb">' +
+          '<img src="' + thumbUrl + '" alt="" onerror="this.style.opacity=0.3">' +
+          '<button class="remove" data-i="' + i + '" title="Quitar">×</button>' +
+          '</div>';
+      }).join('');
+      cont.querySelectorAll('.remove').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const i = parseInt(btn.dataset.i, 10);
+          state.fotos.splice(i, 1);
+          renderThumbs();
+        });
+      });
+    }
+
+    document.getElementById('btnGuardarServicio').addEventListener('click', async function () {
+      if (!state.vehiculoId) { mostrarToast('Seleccioná un vehículo', 'warning'); return; }
+      const descripcion = document.getElementById('srv-descripcion').value.trim();
+      if (!descripcion) { mostrarToast('Ingresá una descripción', 'warning'); return; }
+      const payload = {
+        idVehiculo: state.vehiculoId,
+        fecha: document.getElementById('srv-fecha').value,
+        kilometraje: document.getElementById('srv-kilometraje').value,
+        descripcion: descripcion,
+        repuestos: document.getElementById('srv-repuestos').value.trim(),
+        proximoMantenimiento: document.getElementById('srv-proximo').value.trim(),
+        observaciones: document.getElementById('srv-observaciones').value.trim(),
+        fotosIds: state.fotos.map(function (f) { return f.id; })
+      };
+      const btn = this;
+      const r = await withButtonLoading(btn, function () {
+        return api('altaServicio', payload);
+      });
+      if (apiOk(r)) {
+        mostrarToast('Servicio guardado', 'success');
+        document.getElementById('srv-descripcion').value = '';
+        document.getElementById('srv-repuestos').value = '';
+        document.getElementById('srv-proximo').value = '';
+        document.getElementById('srv-observaciones').value = '';
+        document.getElementById('srv-kilometraje').value = '';
+        state.fotos = [];
+        renderThumbs();
+        setTimeout(function () {
+          mostrarTab('sec-historial');
+          cargarHistorial(state.vehiculoId);
+        }, 600);
+      } else {
+        mostrarToast(apiError(r, 'Error guardando servicio'), 'error');
+      }
+    });
+
+    let histSearchTimer;
+    document.getElementById('hist-buscar').addEventListener('input', function (e) {
+      clearTimeout(histSearchTimer);
+      const q = e.target.value.trim();
+      histSearchTimer = setTimeout(function () { buscarVehiculosHistorial(q); }, 300);
+    });
+
+    async function buscarVehiculosHistorial(q) {
+      dbg.log('buscarVehiculosHistorial inicio q=' + JSON.stringify(q));
+      const r = await api('buscarVehiculos', { q: q });
+      dbg.log('buscarVehiculosHistorial r=' + dbg.resumir(r));
+      const cont = document.getElementById('hist-buscar-resultados');
+      if (!cont) return;
+      if (!apiOk(r)) {
+        cont.innerHTML = '<div class="search-empty"><div class="search-empty-icon">X</div><div>Error: ' + escapeHtml(apiError(r, 'desconocido')) + '</div></div>';
+        cont.style.display = 'block';
+        return;
+      }
+      const vehiculos = r.vehiculos || [];
+      if (vehiculos.length === 0) {
+        let detalle = '';
+        if (state.dashboard && state.dashboard.totalVehiculos > 0) {
+          detalle = '<div style="margin-top: 8px; font-size: 12px; opacity: 0.7;">Hay ' + state.dashboard.totalVehiculos + ' vehículos cargados pero ninguno coincide con la búsqueda.</div>';
+        } else {
+          detalle = '<div style="margin-top: 8px; font-size: 12px; opacity: 0.7;">El sistema no tiene vehículos cargados todavía.</div>';
+        }
+        cont.innerHTML = '<div class="search-empty"><div class="search-empty-icon">∅</div><div>Sin vehículos' + (q ? ' para "' + escapeHtml(q) + '"' : '') + '</div>' + detalle + '</div>';
+        cont.style.display = 'block';
+        return;
+      }
+      cont.innerHTML = vehiculos.map(function (v) {
+        return '<div class="search-item" data-id="' + escapeHtml(v.ID_Vehiculo) + '">' +
+          '<div><strong>' + escapeHtml(v.Patente || 'Sin patente') + '</strong> · ' + escapeHtml(v.Marca || '') + ' ' + escapeHtml(v.Modelo || '') + '</div>' +
+          '<div class="meta">' + escapeHtml(v.clienteNombre || 'Sin cliente') + ' · ' + escapeHtml(v.ID_Vehiculo) + '</div>' +
+          '</div>';
+      }).join('');
+      cont.style.display = 'block';
+      cont.querySelectorAll('.search-item').forEach(function (item) {
+        item.addEventListener('click', function () {
+          cargarHistorial(item.dataset.id);
+        });
+      });
+    }
+
+    async function cargarHistorial(id) {
+      document.getElementById('hist-buscar-resultados').style.display = 'none';
+      document.getElementById('hist-buscar').value = '';
+      const cont = document.getElementById('hist-detalle');
+      cont.innerHTML = '<div class="card"><div class="empty-state"><div class="spinner" style="border-color: var(--border-strong); border-top-color: var(--primary); margin: 0 auto;"></div><p style="margin-top:12px;">Cargando historial...</p></div></div>';
+      const r = await api('historialVehiculo', { idVehiculo: id });
+      if (!apiOk(r)) {
+        cont.innerHTML = '<div class="card"><div class="empty-state"><div class="empty-icon">!</div><h3>No se pudo cargar</h3><p>' + apiError(r) + '</p><button class="btn btn-secondary" onclick="cargarHistorial(\'' + id + '\')">Reintentar</button></div></div>';
+        return;
+      }
+      const v = r.vehiculo || {};
+      const c = r.cliente;
+      const servicios = r.servicios || [];
+      let html = '<div class="card">' +
+        '<div class="card-title">Vehículo</div>' +
+        '<div style="font-size:20px; font-weight:700;">' + (v.Patente || '—') + '</div>' +
+        '<div style="color:var(--text-muted); margin-top: 4px;">' + (v.Marca || '') + ' ' + (v.Modelo || '') + (v.Anio ? ' · Año ' + v.Anio : '') + '</div>' +
+        (c ? '<div style="margin-top:10px; font-size:14px;">Cliente: <strong>' + (c.Nombre || '—') + '</strong>' + (c.Telefono ? ' · ' + c.Telefono : '') + '</div>' : '') +
+        '<div style="margin-top:14px;"><button class="btn btn-secondary btn-sm" onclick="irACargarServicio(\'' + v.ID_Vehiculo + '\', \'' + (v.Patente || '').replace(/'/g, "\\'") + '\')">+ Cargar nuevo servicio a este vehículo</button></div>' +
+        '</div>';
+      if (servicios.length === 0) {
+        html += '<div class="card"><div class="empty-state"><div class="empty-icon">▤</div><h3>Sin servicios registrados</h3><p>Cargá el primer service de este vehículo</p></div></div>';
+      } else {
+        html += '<div class="card"><div class="card-title">Historial (' + servicios.length + ')</div><div class="timeline">';
+        servicios.forEach(function (s) {
+          const fechaStr = (s.Fecha instanceof Date ? s.Fecha.toISOString().slice(0, 10) : String(s.Fecha || '').slice(0, 10));
+          let fotos = '';
+          if (s.Fotos_IDs) {
+            const fIds = String(s.Fotos_IDs).split(',').map(function (x) { return String(x).trim(); }).filter(Boolean);
+            if (fIds.length > 0) {
+              fotos = '<div class="timeline-photos">' +
+                fIds.map(function (fid) {
+                  return '<img src="https://drive.google.com/thumbnail?id=' + encodeURIComponent(fid) + '&sz=w400" alt="" onclick="abrirLightbox(this.src.replace(\'sz=w400\',\'sz=w1200\'), event)">';
+                }).join('') + '</div>';
+            }
+          }
+          html += '<div class="timeline-item">' +
+            '<div class="timeline-dot"></div>' +
+            '<div class="timeline-date">' + (fechaStr || '—') + '</div>' +
+            '<div class="timeline-desc">' + (s.Descripcion || '') + '</div>' +
+            (s.Kilometraje ? '<div class="timeline-detail"><strong>Kilometraje:</strong> ' + s.Kilometraje + ' km</div>' : '') +
+            (s.Repuestos ? '<div class="timeline-detail"><strong>Repuestos:</strong> ' + s.Repuestos + '</div>' : '') +
+            (s.Observaciones ? '<div class="timeline-detail"><strong>Observaciones:</strong> ' + s.Observaciones + '</div>' : '') +
+            (s.Proximo_Mantenimiento ? '<div class="timeline-detail"><strong>Próximo:</strong> ' + s.Proximo_Mantenimiento + '</div>' : '') +
+            fotos +
+            '</div>';
+        });
+        html += '</div></div>';
+      }
+      cont.innerHTML = html;
+    }
+
+    function irACargarServicio(id, patente) {
+      mostrarTab('sec-servicio');
+      seleccionarVehiculoParaServicio(id, patente);
+    }
+
+    function abrirLightbox(src, ev) {
+      if (ev) ev.stopPropagation();
+      const lb = document.getElementById('lightbox');
+      document.getElementById('lightbox-img').src = src;
+      lb.classList.add('open');
+    }
+    function cerrarLightbox() {
+      document.getElementById('lightbox').classList.remove('open');
+    }
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') cerrarLightbox();
+    });
+
+    let qrsSearchTimer;
+    document.getElementById('qrs-buscar').addEventListener('input', function (e) {
+      clearTimeout(qrsSearchTimer);
+      const q = e.target.value.trim();
+      qrsSearchTimer = setTimeout(function () { loadQrs(q); }, 300);
+    });
+
+    async function loadQrs(q) {
+      q = q || '';
+      dbg.log('loadQrs inicio q=' + JSON.stringify(q));
+      const cont = document.getElementById('qrs-lista');
+      cont.innerHTML = '<div class="card"><div class="empty-state"><div class="spinner" style="border-color: var(--border-strong); border-top-color: var(--primary); margin: 0 auto;"></div></div></div>';
+      const r = await api('buscarVehiculos', { q: q });
+      dbg.log('loadQrs r=' + dbg.resumir(r));
+      if (!apiOk(r)) {
+        cont.innerHTML = '<div class="card"><div class="empty-state"><div class="empty-icon">!</div><h3>Error cargando QRs</h3><p>' + escapeHtml(apiError(r, 'desconocido')) + '</p><button class="btn btn-secondary" onclick="loadQrs(\'' + String(q).replace(/'/g, "\\'") + '\')">Reintentar</button></div></div>';
+        return;
+      }
+      const vehiculos = (r.vehiculos || []).slice(0, 30);
+      if (vehiculos.length === 0) {
+        let detalle = '';
+        if (state.dashboard && state.dashboard.totalVehiculos > 0) {
+          detalle = '<div style="margin-top: 10px; font-size: 13px; color: var(--danger-dark); background: var(--danger-light); padding: 10px; border-radius: 8px;">El backend reporta ' + state.dashboard.totalVehiculos + ' vehículos pero la búsqueda no los devuelve. Esto indica un bug en el filtro del backend.</div>';
+        } else {
+          detalle = '<p style="margin-top: 8px;">Aún no cargaste vehículos.</p>';
+        }
+        cont.innerHTML = '<div class="card"><div class="empty-state"><div class="empty-icon">∅</div><h3>No hay vehículos</h3>' + detalle + '<button class="btn btn-primary" style="margin-top: 14px;" onclick="mostrarTab(\'sec-nuevo\')">Crear primer vehículo</button></div></div>';
+        return;
+      }
+      cont.innerHTML = '<div class="qr-card-grid">' + vehiculos.map(function (v) {
+        const token = v.Token || '';
+        const qrUrl = '<?= webappUrl ?>?t=' + encodeURIComponent(token);
+        return '<div class="qr-card">' +
+          '<div class="qr-card-thumb" data-url="' + qrUrl + '"></div>' +
+          '<div class="qr-card-patente">' + escapeHtml(v.Patente || '—') + '</div>' +
+          '<div class="qr-card-meta">' + escapeHtml(v.Marca || '') + ' ' + escapeHtml(v.Modelo || '') + (v.clienteNombre ? ' · ' + escapeHtml(v.clienteNombre) : '') + '</div>' +
+          '<div class="qr-card-actions">' +
+          '<button class="btn btn-secondary btn-ver-hist" data-id="' + escapeHtml(v.ID_Vehiculo) + '">Historial</button>' +
+          '<button class="btn btn-imprimir" data-id="' + escapeHtml(v.ID_Vehiculo) + '">Imprimir</button>' +
+          '</div>' +
+          '</div>';
+      }).join('') + '</div>';
+      cont.querySelectorAll('.qr-card-thumb').forEach(function (el) {
+        try {
+          const qr = new QRCodeStyling({
+            width: 130, height: 130,
+            data: el.dataset.url,
+            dotsOptions: { color: '#0a0a0a', type: 'rounded' },
+            backgroundOptions: { color: '#ffffff' },
+            qrOptions: { errorCorrectionLevel: 'L' }
+          });
+          qr.append(el);
+        } catch (err) {
+          el.innerHTML = '<div style="font-size:11px; color: var(--text-muted); padding: 8px;">QR no disponible</div>';
+        }
+      });
+      cont.querySelectorAll('.btn-imprimir').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const url = '<?= webappUrl ?>?accion=imprimir&v=' + encodeURIComponent(btn.dataset.id) + '&session=' + encodeURIComponent(session);
+          window.open(url, '_blank');
+        });
+      });
+      cont.querySelectorAll('.btn-ver-hist').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          mostrarTab('sec-historial');
+          cargarHistorial(btn.dataset.id);
+        });
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadDashboard);
+    } else {
+      loadDashboard();
+    }
+
+    (function initLogos() {
+      if (!LOGO_URL || LOGO_URL === 'PLACEHOLDER_LOGO_URL') return;
+      const slots = [
+        { img: 'logoTallerHeader', placeholder: 'logoPlaceholderHeader' },
+        { img: 'logoTallerSidebar', placeholder: 'logoPlaceholderSidebar' }
+      ];
+      slots.forEach(function (s) {
+        const img = document.getElementById(s.img);
+        const placeholder = document.getElementById(s.placeholder);
+        if (!img || !placeholder) return;
+        img.onload = function () { img.style.display = 'block'; placeholder.style.display = 'none'; };
+        img.onerror = function () { img.style.display = 'none'; placeholder.style.display = ''; };
+        img.src = LOGO_URL;
+      });
+    })();
+
+    dbg.init();
+  </script>
+</body>
+</html>
